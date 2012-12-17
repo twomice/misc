@@ -1,6 +1,17 @@
 Command line utitlity to compile Kimai exported CSV data into
 something more useful for me.
 
+Call this script as follows:
+$ php /path/to/hours-cleanup.php FILENAME
+
+FILENAME: a CSV file exported from Kimai. This script checks the following
+locations for this file, in this order, and uses the first matching file it
+finds:
+1. [no preceding path] -- as if the file were an absolute file path
+2. the current working directory
+3. /tmp
+
+
 This script is written based on my working style with Kimai:
 * Kimai "tasks" describe the type of work I'm doing, so I have only a few tasks,
 such as:

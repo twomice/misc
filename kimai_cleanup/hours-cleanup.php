@@ -1,9 +1,21 @@
+#!/usr/bin/php
 <?php
 // Default: assumes output is straight from Kimai
 // Date,In,Out,h'm,Time,Rate (by hour),Dollar,Customer,Project,Task,Comment,Location,Tracking Number,Username,cleared
 
 // If second argument is "redo",
 // assumes the file is output from this script
+
+# Ensure sufficient arguments.
+if (empty($argv[1])) {
+  echo "Usage: hours-cleanup FILENAME [REDO]\n";
+  echo "  FILENAME: Name of a Kimai export CSV file; this file is searched for\n";
+  echo "    in the current directory, and in /tmp/.\n";
+  echo "  REDO: Optional. The string 'redo'. If given, we assume FILENAME is\n";
+  echo "    output from this script rather than from Kimai.\n";
+  exit;
+}
+
 
 $redo = (isset($argv[2]) && strtolower($argv[2]) == 'redo');
 

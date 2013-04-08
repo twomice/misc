@@ -12,7 +12,16 @@ $utils->screen_error($projects, Utils::ERROR_FATAL);
 
 require_once (MYKANBANPAD_PATH . '/header.html');
 
-echo "<h1>Kanbanpad tasks assigned to: ". implode($my_aliases, ', ') . "</h1>";
+if (is_array($my_aliases) && !empty($my_aliases)) {
+  $limit_by_alias = TRUE;
+  $my_aliases_string = implode($my_aliases, ', ');
+}
+else {
+  $limit_by_alias = FALSE;
+  $my_aliases_string = '(ALL)';
+}
+
+echo "<h1>Kanbanpad tasks assigned to: ". $my_aliases_string . "</h1>";
 echo "<dl>";
 foreach ($projects as $project) {
   $tasks = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/tasks.json", $username, $key, 'json');
@@ -38,26 +47,38 @@ foreach ($projects as $project) {
 
   foreach ($tasks as $task) {
     $task_title = (property_exists($task, 'title') ? $task->title : 'no_title');
-    if (
-      property_exists($task, 'assigned_to')
-      && is_array($task->assigned_to)
-    ) {
-      $assignment_matches = array_intersect($task->assigned_to, $my_aliases);
+
+    if ($steps[$task->step_id] == 'Released') {
+      // Step is "Released", so we skip.
+      continue;
+    }
+    if ($limit_by_alias) {
+      $alias_matches = FALSE;
       if (
-        !empty($assignment_matches)
-        && $steps[$task->step_id] != 'Released'
+        property_exists($task, 'assigned_to')
+        && is_array($task->assigned_to)
       ) {
-        $project_has_tasks = TRUE;
-        $url = "https://www.kanbanpad.com/projects/{$project->slug}#!xt-{$task->id}";
-        echo "<dt><a target=\"_blank\" href=\"$url\">{$task_title}</a></dt>";
-        echo '<dd><table class="task-properties-table">';
-        echo "<tr><td class=\"label\">Note:</td><td>". (property_exists($task, 'note') ? nl2br($task->note) : '') ."</td></tr>";
-        echo "<tr><td class=\"label\">Comments:</td><td> {$task->comments_total}</td></tr>";
-        echo "<tr><td class=\"label\">Current step:</td><td> ". $steps[$task->step_id]."</td></tr>";
-        echo "<tr><td class=\"label\">Urgent:</td><td> ". ($task->urgent ? 'Yes' : 'No' ) ."</td></tr>";
-        echo "</table></dd>";
+        $assignment_matches = array_intersect($task->assigned_to, $my_aliases);
+        if (!empty($assignment_matches)) {
+          $alias_matches = TRUE;
+        }
+      }
+      if (!$alias_matches) {
+        // We're limiting by alias, and the alias doesn't match, so skip.
+        continue;
       }
     }
+
+    $project_has_tasks = TRUE;
+    $url = "https://www.kanbanpad.com/projects/{$project->slug}#!xt-{$task->id}";
+    echo "<dt><a target=\"_blank\" href=\"$url\">{$task_title}</a></dt>";
+    echo '<dd><table class="task-properties-table">';
+    echo "<tr><td class=\"label\">ID:</td><td>{$task->task_id}</td></tr>";
+    echo "<tr><td class=\"label\">Note:</td><td>". (property_exists($task, 'note') ? nl2br($task->note) : '') ."</td></tr>";
+    echo "<tr><td class=\"label\">Comments:</td><td> {$task->comments_total}</td></tr>";
+    echo "<tr><td class=\"label\">Current step:</td><td> ". $steps[$task->step_id]."</td></tr>";
+    echo "<tr><td class=\"label\">Urgent:</td><td> ". ($task->urgent ? 'Yes' : 'No' ) ."</td></tr>";
+    echo "</table></dd>";
   }
   if (!$project_has_tasks) {
     echo "(no tasks)";

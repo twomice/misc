@@ -53,23 +53,43 @@ class Utils {
   }
 
   function screen_error($response, $error_type) {
+
+    $error = '';
+
+    if($response === NULL) {
+      $error = 'KanbanPad.com API has returned null; cannot process this step.';
+    }
     if (is_object($response) && property_exists($response, 'success') && $response->success === FALSE) {
+      require_once(MYKANBANPAD_PATH . '/krumo/class.krumo.php');
+      $error .= "<fieldset><legend>ERROR</legend>";
+      $error .= $this->krumo_ob($response);
+      $error .= '<h2>Backtrace:</h2>';
+      $db = debug_backtrace();
+      $error .= $this->krumo_ob($db);
+      $error .= "</fieldset>";
+    }
+
+
+    if ($error) {
       if ($error_type == Utils::ERROR_SILENT) {
         return TRUE;
       }
-      require_once(MYKANBANPAD_PATH . '/krumo/class.krumo.php');
-      echo "<fieldset><legend>ERROR</legend>";
-      krumo($response);
-      $db = debug_backtrace();
-      echo '<h2>Backtrace:</h2>';
-      krumo($db);
-      echo "</fieldset>";
-      if ($error_type == Utils::ERROR_FATAL) {
-        die('Fatal error. Exiting.');
+      elseif ($error_type == Utils::ERROR_FATAL) {
+        die($error . 'Fatal error. Exiting.');
       }
       else {
+        echo $error;
         return TRUE;
       }
     }
+  }
+
+  // Save krumo htlm using output buffering.
+  function krumo_ob($object) {
+    ob_start();
+    krumo($object);
+    $output = ob_get_contents();
+    ob_end_clean();
+    return $output;
   }
 }

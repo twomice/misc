@@ -48,7 +48,7 @@ foreach ($projects as $project) {
   foreach ($tasks as $task) {
     $task_title = (property_exists($task, 'title') ? $task->title : 'no_title');
 
-    if ($steps[$task->step_id] == 'Released') {
+    if (array_key_exists($task->step_id, $steps) && $steps[$task->step_id] == 'Released') {
       // Step is "Released", so we skip.
       continue;
     }
@@ -76,7 +76,7 @@ foreach ($projects as $project) {
     echo "<tr><td class=\"label\">ID:</td><td>{$task->task_id}</td></tr>";
     echo "<tr><td class=\"label\">Note:</td><td>". (property_exists($task, 'note') ? nl2br($task->note) : '') ."</td></tr>";
     echo "<tr><td class=\"label\">Comments:</td><td> {$task->comments_total}</td></tr>";
-    echo "<tr><td class=\"label\">Current step:</td><td> ". $steps[$task->step_id]."</td></tr>";
+    echo "<tr><td class=\"label\">Current step:</td><td> ". (array_key_exists($task->step_id, $steps) ? $steps[$task->step_id] : 'Unknown') . "</td></tr>";
     echo "<tr><td class=\"label\">Urgent:</td><td> ". ($task->urgent ? 'Yes' : 'No' ) ."</td></tr>";
     echo "</table></dd>";
   }

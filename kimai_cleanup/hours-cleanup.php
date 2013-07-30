@@ -140,6 +140,7 @@ foreach ($rows as &$row) {
     'task' => $row['task'],
   );
 }
+unset($row);
 
 $columns_ordered = array(
   array(

@@ -1,7 +1,6 @@
 <?php
 
-define('MYKANBANPAD_PATH', dirname(__FILE__));
-require_once (MYKANBANPAD_PATH . '/config.php');
+require_once (MYKANBANPAD_CONFIG_PATH);
 require_once (MYKANBANPAD_PATH . '/Utils.class.php');
 
 $utils = new Utils();

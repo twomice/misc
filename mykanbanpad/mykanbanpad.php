@@ -3,9 +3,9 @@
 require_once (MYKANBANPAD_CONFIG_PATH);
 require_once (MYKANBANPAD_PATH . '/Utils.class.php');
 
-$utils = new Utils();
+$utils = Utils::singleton($username, $key);
 
-$projects = $utils->fetch('https://www.kanbanpad.com/api/v1/projects.json', $username, $key, 'json');
+$projects = $utils->fetch('https://www.kanbanpad.com/api/v1/projects.json', 'json');
 
 $utils->screen_error($projects, Utils::ERROR_FATAL);
 
@@ -23,7 +23,7 @@ else {
 echo "<h1>Kanbanpad tasks assigned to: ". $my_aliases_string . "</h1>";
 echo "<dl>";
 foreach ($projects as $project) {
-  $tasks = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/tasks.json", $username, $key, 'json');
+  $tasks = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/tasks.json", 'json');
   if ($utils->screen_error($tasks, Utils::ERROR_SILENT)) {
     continue;
   }
@@ -31,7 +31,7 @@ foreach ($projects as $project) {
   echo "<h2>{$project->name}</h2>";
   $project_has_tasks = FALSE;
   
-  $steps = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/steps.json", $username, $key, 'json');
+  $steps = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/steps.json", 'json');
 
   if ($utils->screen_error($steps, Utils::ERROR_WARNING)) {
     $steps = array();
@@ -68,6 +68,9 @@ foreach ($projects as $project) {
       }
     }
 
+    $last_comment = get_task_last_comment($project->slug, $task->id);
+    if ($last_comment > 1) {break 2;}
+
     $project_has_tasks = TRUE;
     $url = "https://www.kanbanpad.com/projects/{$project->slug}#!xt-{$task->id}";
     echo "<dt><a target=\"_blank\" href=\"$url\">{$task_title}</a></dt>";
@@ -77,6 +80,7 @@ foreach ($projects as $project) {
     echo "<tr><td class=\"label\">Comments:</td><td> {$task->comments_total}</td></tr>";
     echo "<tr><td class=\"label\">Current step:</td><td> ". (array_key_exists($task->step_id, $steps) ? $steps[$task->step_id] : 'Unknown') . "</td></tr>";
     echo "<tr><td class=\"label\">Urgent:</td><td> ". ($task->urgent ? 'Yes' : 'No' ) ."</td></tr>";
+    echo "<tr><td class=\"label\">Latest comment:</td><td>". nl2br($last_comment) ."</td></tr>";
     echo "</table></dd>";
   }
   if (!$project_has_tasks) {
@@ -90,3 +94,15 @@ echo "</dl>";
 require_once (MYKANBANPAD_PATH . '/footer.html');
 
 
+function get_task_last_comment($project_slug, $task_id) {
+  $ret = '(none)';
+  $utils = Utils::singleton();
+  $comments = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project_slug}/tasks/{$task_id}/comments.json", 'json');
+  $comment = array_pop($comments);
+  if ($comment) {
+    $ret = "{$comment->body}
+      -- {$comment->author}, {$comment->created_at}
+    ";
+  }
+  return $ret;
+}

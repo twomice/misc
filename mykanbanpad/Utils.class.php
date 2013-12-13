@@ -8,15 +8,27 @@ class Utils {
   const ERROR_WARNING = 2;
   const ERROR_SILENT = 4;
 
-  function fetch($url, $username, $password, $decode_from) {
-    $response = $this->curl($url, $username, $password);
+  function  __construct($username, $password) {
+    $this->username = $username;
+    $this->password = $password;
+  }
+  public static function singleton($username = NULL, $password = NULL) {
+    static $singleton;
+    if ($singleton === NULL) {
+      $singleton = new Utils($username, $password);
+    }
+    return $singleton;
+  }
+  
+  function fetch($url, $decode_from) {
+    $response = $this->curl($url);
     if ($decode_from == 'json') {
       $response = json_decode($response);
     }
     return $response;
   }
 
-  function curl($url, $username, $password, $referer = null, $post = null, $return_header = false) {
+  function curl($url, $referer = null, $post = null, $return_header = false) {
     static $tmpfile;
 
     if(!isset($tmpfile) || ($tmpfile == '')) $tmpfile = tempnam('/tmp', 'FOO');
@@ -26,7 +38,7 @@ class Utils {
     curl_setopt($ch, CURLOPT_COOKIEFILE, $tmpfile);
     curl_setopt($ch, CURLOPT_COOKIEJAR, $tmpfile);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERPWD, "$username:$password");
+    curl_setopt($ch, CURLOPT_USERPWD, "{$this->username}:{$this->password}");
     curl_setopt($ch, CURLOPT_USERAGENT, "Mozilla/5.0 (iPhone; U; CPU iPhone OS 2_2_1 like Mac OS X; en-us) AppleWebKit/525.18.1 (KHTML, like Gecko) Version/3.1.1 Mobile/5H11 Safari/525.20");
     if($referer) curl_setopt($ch, CURLOPT_REFERER, $referer);
 

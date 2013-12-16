@@ -1,5 +1,8 @@
 <?php
 
+global $config;
+config();
+
 require_once (MYKANBANPAD_CONFIG_PATH);
 require_once (MYKANBANPAD_PATH . '/Utils.class.php');
 
@@ -21,6 +24,9 @@ else {
 }
 
 echo "<h1>Kanbanpad tasks assigned to: ". $my_aliases_string . "</h1>";
+
+echo build_option_links();
+
 echo "<dl>";
 foreach ($projects as $project) {
   $tasks = $utils->fetch("https://www.kanbanpad.com/api/v1/projects/{$project->slug}/tasks.json", 'json');
@@ -68,8 +74,7 @@ foreach ($projects as $project) {
       }
     }
 
-    $last_comment = get_task_last_comment($project->slug, $task->id);
-    if ($last_comment > 1) {break 2;}
+    
 
     $project_has_tasks = TRUE;
     $url = "https://www.kanbanpad.com/projects/{$project->slug}#!xt-{$task->id}";
@@ -80,7 +85,12 @@ foreach ($projects as $project) {
     echo "<tr><td class=\"label\">Comments:</td><td> {$task->comments_total}</td></tr>";
     echo "<tr><td class=\"label\">Current step:</td><td> ". (array_key_exists($task->step_id, $steps) ? $steps[$task->step_id] : 'Unknown') . "</td></tr>";
     echo "<tr><td class=\"label\">Urgent:</td><td> ". ($task->urgent ? 'Yes' : 'No' ) ."</td></tr>";
-    echo "<tr><td class=\"label\">Latest comment:</td><td>". nl2br($last_comment) ."</td></tr>";
+
+    if ($config['comments']) {
+      $last_comment = get_task_last_comment($project->slug, $task->id);
+      echo "<tr><td class=\"label\">Latest comment:</td><td>". nl2br($last_comment) ."</td></tr>";
+    }
+    
     echo "</table></dd>";
   }
   if (!$project_has_tasks) {
@@ -105,4 +115,23 @@ function get_task_last_comment($project_slug, $task_id) {
     ";
   }
   return $ret;
+}
+
+function build_option_links() {
+  global $config;
+  $options = array(
+    'comments' => ($config['comments'] ? 0 : 1),
+  );
+
+  $label = ($config['comments'] ? 'Hide comments' : 'Show latest comments');
+
+  $query_string = http_build_query($options);
+  $url = "{$_SERVER['PHP_SELF']}?$query_string";
+  $ret .= '<a href="'. $url .'">' . $label .'</a>';
+  return $ret;
+}
+
+function config() {
+  global $config;
+  $config['comments'] = $_GET['comments'];
 }

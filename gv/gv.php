@@ -1,5 +1,5 @@
 #!/usr/bin/php
-  <?php
+<?php
 /*
  * google-voice-dialer, modified
  *
@@ -41,6 +41,11 @@ switch ($cmd) {
     default:
         printUsage();
     break;
+}
+
+$status = $gv->getStatus();
+if ($status) {
+  msgbox("ALERT: \n". $status);
 }
 
 function toggle($arg, $gv) {
@@ -184,6 +189,10 @@ class GoogleVoice
         $them = preg_replace('/[^0-9]/', '', $them);
 
         $html = $this->login();
+        if (!$html) {
+            $this->addStatus('Login failed');
+            return false;
+        }
 
         $crumb = urlencode($this->match('!<input.*?name="_rnr_se".*?value="(.*?)"!ms', $html, 1));
 
@@ -208,6 +217,10 @@ class GoogleVoice
         $number = preg_replace('/[^0-9]/', '', $number);
 
         $html = $this->login();
+        if (!$html) {
+            $this->addStatus('Login failed');
+            return false;
+        }
 
         $crumb = urlencode($this->match('!<input.*?name="_rnr_se".*?value="(.*?)"!ms', $html, 1));
 

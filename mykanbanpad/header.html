@@ -18,5 +18,20 @@
         margin-top: 1em;
       }
     </style>
+    <script type="text/javascript">
+      /**
+       * Assume the given id is for a dom element containing a UTC timestamp
+       * string; convert that timestamp to the user's timezone, and then
+       * replace the contents of the dom element with the converted timestamp.
+       */
+      function adjustTimestampTimezone(id) {
+        var el = document.getElementById(id);
+        if (el) {
+          var val = el.innerHTML;
+          el.innerHTML = new Date(val).toString();
+        }
+      }
+    </script>
+    
   </head>
   <body>

@@ -89,6 +89,7 @@ foreach ($projects as $project) {
     if ($config['comments']) {
       $last_comment = get_task_last_comment($project->slug, $task->id);
       echo "<tr><td class=\"label\">Latest comment:</td><td>". nl2br($last_comment) ."</td></tr>";
+      echo '<script type="text/javascript">adjustTimestampTimezone("'. $task->id . '_comment_created_at");</script>';
     }
     
     echo "</table></dd>";
@@ -111,7 +112,7 @@ function get_task_last_comment($project_slug, $task_id) {
   $comment = array_pop($comments);
   if ($comment) {
     $ret = "{$comment->body}
-      -- {$comment->author}, {$comment->created_at}
+      -- {$comment->author}, <span id=\"{$task_id}_comment_created_at\">{$comment->created_at}</span>
     ";
   }
   return $ret;

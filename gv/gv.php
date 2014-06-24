@@ -141,9 +141,9 @@ function msgbox($msg) {
 
 class GoogleVoice
 {
-    public $username;
-    public $password;
-    public $status;
+    public $username = '';
+    public $password = '';
+    public $status = array();
 
     private $json;
 

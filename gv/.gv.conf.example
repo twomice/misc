@@ -1,0 +1,10 @@
+<?
+/* This is a php include file. Use proper php syntax.
+*/
+define ('USERNAME', 'myusername@gmail.com');
+define ('PASSWORD', ' mypassword');
+
+// Issuing `gv call X` will create a new call to X and ring you on HOMENUMBER.
+define ('HOMENUMBER', '[my home landline number]'); 
+
+define ('LOGFILE', '/tmp/[some file for logging]');

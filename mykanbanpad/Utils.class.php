@@ -65,22 +65,41 @@ class Utils {
   }
 
   function screen_error($response, $error_type) {
-
-    $error = '';
+    $is_cli = $this->is_cli();
+    $error = $response_error = $bt_error = '';
 
     if($response === NULL) {
       $error = 'KanbanPad.com API has returned null; cannot process this step.';
     }
     if (is_object($response) && property_exists($response, 'success') && $response->success === FALSE) {
-      require_once(MYKANBANPAD_PATH . '/krumo/class.krumo.php');
-      $error .= "<fieldset><legend>ERROR</legend>";
-      $error .= $this->krumo_ob($response);
-      $error .= '<h2>Backtrace:</h2>';
-      $db = debug_backtrace();
-      $error .= $this->krumo_ob($db);
-      $error .= "</fieldset>";
-    }
+      $bt = debug_backtrace();
+      $krumo_class_file = MYKANBANPAD_PATH . '/krumo/class.krumo.php';
+      if (file_exists($krumo_class_file)) {
+        require_once($krumo_class_file);
+        $response_error = $this->krumo_ob($response);
+        $bt_error = $this->krumo_ob($bt);
+      }
+      else {
+        $response_error = var_export($response, 1);
+        $bt_error = var_export($bt, 1);
+        if (!$is_cli) {
+          $response_error = "<pre>$response_error</pre>";
+          $bt_error = "<pre>$bt_error</pre>";
+        }
+      }
 
+      if ($is_cli) {
+        $error = "ERROR:\n";
+        $error .= $response_error . "\n";
+      }
+      else {
+        $error .= "<fieldset><legend>ERROR</legend>";
+        $error .= $response_error;
+        $error .= '<h2>Backtrace:</h2>';
+        $error .= $bt_error;
+        $error .= "</fieldset>";
+      }
+    }
 
     if ($error) {
       if ($error_type == Utils::ERROR_SILENT) {
@@ -103,5 +122,12 @@ class Utils {
     $output = ob_get_contents();
     ob_end_clean();
     return $output;
+  }
+  
+  function is_cli() {
+    if(defined('STDIN')) {
+      return true;
+    }
+    return false;
   }
 }

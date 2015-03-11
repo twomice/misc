@@ -16,6 +16,17 @@ $utils = Utils::singleton($username, $key);
 
 $projects = $utils->fetch('https://www.kanbanpad.com/api/v1/projects.json', 'json');
 $utils->screen_error($projects, Utils::ERROR_FATAL);
+
+// Limit by organization, if so configured.
+if ($limit_to_organization_id) {
+  $new_projects = array();
+  foreach ($projects as $project) {
+    if ($project->organization_id == $limit_to_organization_id) {
+      $new_projects[] = $project;
+    }
+  }
+  $projects = $new_projects;
+}
 echo "saving projects to projects.json\n";
 export_to_file('projects.json', json_encode($projects));
 

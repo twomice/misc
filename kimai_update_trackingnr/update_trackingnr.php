@@ -146,8 +146,6 @@ function is_authentication_available() {
     fatal('Could not complete action. Hint: See INSTALLATION and CONFIGURATION in "README.md".');
   }
   if ($result->num_rows) {
-    echo "<pre>". var_export($result, 1) . '</pre>';
-    echo "<pre>". var_export(mysqli_fetch_assoc($result)) . '</pre>';
     return FALSE;
   }
   return TRUE;

@@ -14,11 +14,11 @@ run();
 function setup() {
   $config_file = dirname(__FILE__) . '/config.php';
   if (!file_exists($config_file) || !is_readable($config_file)) {
-    fatal('Missing configuration. See "CONFIGURATION" in README.txt.');
+    fatal('Missing configuration. See "CONFIGURATION" in README.md.');
   }
   require_once($config_file);
   if (!defined('UPSTREAM_DIR') || !is_dir(UPSTREAM_DIR) || !file_exists(UPSTREAM_DIR . '/kimaiversion.php')) {
-    fatal('Bad configuration. See "CONFIGURATION" in README.txt. Is UPSTREAM_DIR correct?');
+    fatal('Bad configuration. See "CONFIGURATION" in README.md. Is UPSTREAM_DIR correct?');
   }
 }
 

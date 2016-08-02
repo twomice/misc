@@ -139,9 +139,12 @@ function format_data_or_die() {
 function is_authentication_available() {
   $result = db_unsafe_query("
     SELECT 1
-    FROM twomice_auth_log
+    FROM update_trackingnr_auth_log
     WHERE timestamp > DATE_ADD(NOW(),INTERVAL -5 SECOND)
   ");
+  if($result === FALSE) {
+    fatal('Could not complete action. Hint: See INSTALLATION and CONFIGURATION in "README.md".');
+  }
   if ($result->num_rows) {
     echo "<pre>". var_export($result, 1) . '</pre>';
     echo "<pre>". var_export(mysqli_fetch_assoc($result)) . '</pre>';
@@ -151,13 +154,13 @@ function is_authentication_available() {
 }
 
 function log_authentication() {
-  $result = db_unsafe_query("INSERT INTO twomice_auth_log(timestamp) values (now());");
+  $result = db_unsafe_query("INSERT INTO update_trackingnr_auth_log(timestamp) values (now());");
   $result = db_unsafe_query("
-    DELETE FROM `twomice_auth_log`
+    DELETE FROM `update_trackingnr_auth_log`
     WHERE authlog_ID != (
       SELECT id FROM (
           SELECT authlog_ID id
-          FROM twomice_auth_log
+          FROM update_trackingnr_auth_log
           ORDER BY authlog_ID DESC LIMIT 1
       ) id
     )

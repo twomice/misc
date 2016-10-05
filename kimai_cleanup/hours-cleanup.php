@@ -194,11 +194,14 @@ foreach ($rows as $row) {
   $date_tasks[$row['customer']] = (isset($date_tasks[$row['customer']]) ? $date_tasks[$row['customer']] : array());
   $date_tasks[$row['customer']][$row['date']] = (isset($date_tasks[$row['customer']][$row['date']]) ? $date_tasks[$row['customer']][$row['date']] : array());
   $date_tasks[$row['customer']][$row['date']][$row['extra_comment']] = (isset($date_tasks[$row['customer']][$row['date']][$row['extra_comment']]) ? $date_tasks[$row['customer']][$row['date']][$row['extra_comment']] : array());
-  $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['minutes'] = (isset($date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['minutes']) ? $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['minutes'] : 0);
+  if (empty($date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['seconds'])) {
+    $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['seconds'] = 0;
+  }
 
-  list($hours, $minutes) = explode(':', $row['hm']);
+  list($hours, $minutes, $seconds) = explode(':', $row['hm']);
   $minutes += ($hours * 60);
-  $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['minutes'] += $minutes;
+  $seconds += ($minutes * 60);
+  $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['seconds'] += $seconds;
   if (!isset($date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['row'])) {
     $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['row'] = $row;
     $date_tasks[$row['customer']][$row['date']][$row['extra_comment']]['row']['extra_comment'] = $row['extra_comment'];
@@ -213,9 +216,8 @@ fputcsv($op, $header_row);
 foreach($date_tasks as $client => $dates) {
   foreach($dates as $date => $tasks) {
     foreach($tasks as $task => $task_properties) {
-      $minutes = $task_properties['minutes'];
       $task_row = $task_properties['row'];
-      $task_row['hours'] = sprintf("%d:%02d", floor((int)$minutes / 60), (int)$minutes % 60);
+      $task_row['hours'] = secondstotimestring($task_properties['seconds']);
       $task_row['date'] = $date;
 
       $row = array();
@@ -235,3 +237,9 @@ exit;
 
 
 
+function secondstotimestring($seconds) {
+  $hours = floor($seconds / 3600);
+  $minutes = floor(($seconds / 60) % 60);
+  $seconds = $seconds % 60;
+  return sprintf("%02d:%02d:%02d", $hours, $minutes, $seconds);
+}

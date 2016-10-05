@@ -3,21 +3,14 @@
 // Default: assumes output is straight from Kimai
 // Date,In,Out,h'm,Time,Rate (by hour),Dollar,Customer,Project,Task,Comment,Location,Tracking Number,Username,cleared
 
-// If second argument is "redo",
-// assumes the file is output from this script
-
 # Ensure sufficient arguments.
 if (empty($argv[1])) {
-  echo "Usage: hours-cleanup FILENAME [REDO]\n";
+  echo "Usage: hours-cleanup FILENAME\n";
   echo "  FILENAME: Name of a Kimai export CSV file; this file is searched for\n";
   echo "    in the current directory, and in /tmp/.\n";
-  echo "  REDO: Optional. The string 'redo'. If given, we assume FILENAME is\n";
-  echo "    output from this script rather than from Kimai.\n";
   exit;
 }
 
-
-$redo = (isset($argv[2]) && strtolower($argv[2]) == 'redo');
 
 // Writable temp directory.
 $tmp = '/tmp';
@@ -62,31 +55,17 @@ $sort = array();
 while ($row = fgetcsv($fp)) {
   $newrow = array();
 
-  // Get columns depending on $redo:
-  if ($redo) {
-    $newrow['date'] = $row[0];
-    $newrow['hm'] = $row[1];
-    $newrow['project'] = $row[2];
-    $newrow['rate'] = $row[3];
-    $newrow['comment'] = $row[4];
-    $newrow['original_comment'] = $row[5];
-    $newrow['customer'] = $row[6];
-    $newrow['in'] = $row[7];
-    $newrow['out'] = $row[8];
-    $newrow['task'] = $row[9];
-    $newrow['sorttimestamp'] = strtotime($newrow['date'] . ' ' . $newrow['in']);
-  }
-  else {
-    $newrow['date'] = preg_replace('/^(\d+)\.(\d+).$/', '$2/$1/'. date('Y'), $row[0]);
-    $newrow['in'] = $row[1];
-    $newrow['out'] = $row[2];
-    $newrow['hm'] = $row[3];
-    $newrow['customer'] = $row[7];
-    $newrow['project'] = $row[8];
-    $newrow['task'] = $row[9];
-    $newrow['comment'] = $row[10];
-    $newrow['sorttimestamp'] = strtotime($newrow['date'] . ' ' . $newrow['in']);
-  }
+  // Get columns 
+  $newrow['date'] = preg_replace('/^(\d+)\.(\d+).$/', '$2/$1/'. date('Y'), $row[0]);
+  $newrow['in'] = $row[1];
+  $newrow['out'] = $row[2];
+  $newrow['hm'] = $row[3];
+  $newrow['customer'] = $row[7];
+  $newrow['project'] = $row[8];
+  $newrow['task'] = $row[9];
+  $newrow['comment'] = $row[10];
+  $newrow['trackingno'] = $row[12];
+  $newrow['sorttimestamp'] = strtotime($newrow['date'] . ' ' . $newrow['in']);
 
   // Sort rows by client/project/datetime
   $row_sort_string =
@@ -128,6 +107,8 @@ foreach ($rows as &$row) {
   $row['extra_comment'] = $last_project_comment[$project_key] = $comment;
 
   $row = array(
+    'zef_in' => strtotime("{$row['date']} {$row['in']}"),
+    'trackingno' => $row['trackingno'],
     'date' => $row['date'],
     'hm' => $row['hm'],
     'project' => $row['project'],
@@ -143,6 +124,14 @@ foreach ($rows as &$row) {
 unset($row);
 
 $columns_ordered = array(
+  array(
+    'key' => 'zef_in',
+    'label' => 'zef_in',
+  ),
+  array(
+    'key' => 'trackingno',
+    'label' => 'zef_trackingnr',
+  ),
   array(
     'key' => 'date',
     'label' => 'Date',
@@ -191,14 +180,12 @@ foreach ($columns_ordered as $column) {
 }
 
 $file_prefix = uniqid();
-if (!$redo) {
-  $cleaned_file = "$tmp/{$file_prefix}_cleaned.csv";
-  echo "Cleaned data: $cleaned_file\n";
-  $op = fopen($cleaned_file, 'w');
-  fputcsv($op, $header_row);
-  foreach ($rows as $row) {
-    fputcsv($op, $row);
-  }
+$cleaned_file = "$tmp/{$file_prefix}_cleaned.csv";
+echo "Cleaned data: $cleaned_file\n";
+$op = fopen($cleaned_file, 'w');
+fputcsv($op, $header_row);
+foreach ($rows as $row) {
+  fputcsv($op, $row);
 }
 
 $date_tasks = array();

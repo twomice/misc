@@ -59,20 +59,20 @@ while ($row = fgetcsv($fp)) {
   $newrow['date'] = preg_replace('/^(\d+)\.(\d+).$/', '$2/$1/'. date('Y'), $row[0]);
   $newrow['in'] = $row[1];
   $newrow['out'] = $row[2];
-  $newrow['hm'] = $row[3];
+  $newrow['hours'] = $row[3];
   $newrow['customer'] = $row[11];
   $newrow['project'] = $row[12];
   $newrow['activity'] = $row[13];
-  $newrow['comment'] = $row[15];
-  $newrow['trackingno'] = $row[17];
+  $newrow['comment'] = $row[14];
+  $newrow['trackingno'] = $row[16];
   $newrow['sorttimestamp'] = strtotime($newrow['date'] . ' ' . $newrow['in']);
 
   // Sort rows by client/project/datetime
   $row_sort_string =
     // client
     $newrow['customer']
-    // project
-    // . '|'. $newrow['project']
+    // activity
+    . '|'. $newrow['activity']
     // date and time
     . '|'. $newrow['sorttimestamp']
   ;
@@ -85,7 +85,7 @@ while ($row = fgetcsv($fp)) {
 }
 fclose($fp);
 
-// Sort rows by client/project/datetime
+// Sort rows by client/activity/datetime
 array_multisort($sort, $rows);
 
 // Adjust for final display:
@@ -110,7 +110,7 @@ foreach ($rows as &$row) {
     'zef_in' => strtotime("{$row['date']} {$row['in']}"),
     'trackingno' => $row['trackingno'],
     'date' => $row['date'],
-    'hm' => $row['hm'],
+    'hours' => $row['hours'],
     'project' => $row['project'],
     'extra_comment' => $row['extra_comment'],
     'comment' => $row['comment'],
@@ -132,6 +132,18 @@ $columns_ordered = array(
     'label' => 'zef_trackingnr',
   ),
   array(
+    'key' => 'activity',
+    'label' => 'activity',
+  ),
+  array(
+    'key' => 'customer',
+    'label' => 'Client',
+  ),
+  array(
+    'key' => 'project',
+    'label' => 'Project',
+  ),
+  array(
     'key' => 'date',
     'label' => 'Date',
   ),
@@ -140,20 +152,8 @@ $columns_ordered = array(
     'label' => 'Hours',
   ),
   array(
-    'key' => 'project',
-    'label' => 'Project',
-  ),
-  array(
     'key' => 'extra_comment',
     'label' => 'Comment',
-  ),
-  array(
-    'key' => 'comment',
-    'label' => 'Original comment',
-  ),
-  array(
-    'key' => 'customer',
-    'label' => 'Client',
   ),
   array(
     'key' => 'in',
@@ -164,8 +164,8 @@ $columns_ordered = array(
     'label' => 'out',
   ),
   array(
-    'key' => 'activity',
-    'label' => 'activity',
+    'key' => 'comment',
+    'label' => 'Original comment',
   ),
 );
 
@@ -180,26 +180,49 @@ echo "Cleaned data: $cleaned_file\n";
 $op = fopen($cleaned_file, 'w');
 fputcsv($op, $header_row);
 foreach ($rows as $row) {
-  fputcsv($op, $row);
+//  var_dump($row); exit;
+  
+  $output_row = array();
+  foreach ($columns_ordered as $column) {
+    $output_row[] = $row[$column['key']];
+  }
+  fputcsv($op, $output_row);
 }
+fclose($op);
 
+
+// Begin processing "consolidated" list.
 $date_activities = array();
 foreach ($rows as $row) {
   // Initialize arrays
-  $date_activities[$row['customer']] = (isset($date_activities[$row['customer']]) ? $date_activities[$row['customer']] : array());
-  $date_activities[$row['customer']][$row['date']] = (isset($date_activities[$row['customer']][$row['date']]) ? $date_activities[$row['customer']][$row['date']] : array());
-  $date_activities[$row['customer']][$row['date']][$row['extra_comment']] = (isset($date_activities[$row['customer']][$row['date']][$row['extra_comment']]) ? $date_activities[$row['customer']][$row['date']][$row['extra_comment']] : array());
-  if (empty($date_activities[$row['customer']][$row['date']][$row['extra_comment']]['seconds'])) {
-    $date_activities[$row['customer']][$row['date']][$row['extra_comment']]['seconds'] = 0;
+  $customer = $row['customer'];
+  $date = $row['date'];
+  $activity = $row['activity'];
+  $extra_comment = $row['extra_comment'];
+
+  if (!isset($date_activities[$customer])) {
+    $date_activities[$customer] = array();
+  }
+  if (!isset($date_activities[$customer][$date])) {
+    $date_activities[$customer][$date] = array();
+  }
+  if (!isset($date_activities[$customer][$date][$activity])) {
+    $date_activities[$customer][$date][$activity] = array();
+  }
+  if (!isset($date_activities[$customer][$date][$activity][$extra_comment])) {
+    $date_activities[$customer][$date][$activity][$extra_comment] = array();
+  }
+  if (!isset($date_activities[$customer][$date][$activity][$extra_comment]['seconds'])) {
+    $date_activities[$customer][$date][$activity][$extra_comment]['seconds'] = 0;
   }
 
-  list($hours, $minutes, $seconds) = explode(':', $row['hm']);
+  list($hours, $minutes, $seconds) = explode(':', $row['hours']);
   $minutes += ($hours * 60);
   $seconds += ($minutes * 60);
-  $date_activities[$row['customer']][$row['date']][$row['extra_comment']]['seconds'] += $seconds;
-  if (!isset($date_activities[$row['customer']][$row['date']][$row['extra_comment']]['row'])) {
-    $date_activities[$row['customer']][$row['date']][$row['extra_comment']]['row'] = $row;
-    $date_activities[$row['customer']][$row['date']][$row['extra_comment']]['row']['extra_comment'] = $row['extra_comment'];
+  $date_activities[$customer][$date][$activity][$extra_comment]['seconds'] += $seconds;
+  if (!isset($date_activities[$customer][$date][$activity][$extra_comment]['row'])) {
+    $date_activities[$customer][$date][$activity][$extra_comment]['row'] = $row;
+    $date_activities[$customer][$date][$activity][$extra_comment]['row']['extra_comment'] = $row['extra_comment'];
   }
 }
 
@@ -210,17 +233,19 @@ fputcsv($op, $header_row);
 
 foreach($date_activities as $client => $dates) {
   foreach($dates as $date => $activities) {
-    foreach($activities as $activity => $activity_properties) {
-      $activity_row = $activity_properties['row'];
-      $activity_row['hours'] = secondstotimestring($activity_properties['seconds']);
-      $activity_row['date'] = $date;
+    foreach($activities as $activity) {
+      foreach($activity as $comment => $comment_properties) {
+        $comment_row = $comment_properties['row'];
+        $comment_row['hours'] = secondstotimestring($comment_properties['seconds']);
+        $comment_row['date'] = $date;
 
-      $row = array();
-      foreach ($columns_ordered as $column) {
-        $row[] = $activity_row[$column['key']];
+        $row = array();
+        foreach ($columns_ordered as $column) {
+          $row[] = $comment_row[$column['key']];
+        }
+
+        fputcsv($op, $row);
       }
-      
-      fputcsv($op, $row);
     }
   }
 }

@@ -1,7 +1,7 @@
 #!/usr/bin/php
 <?php
 // Default: assumes output is straight from Kimai
-// Date,In,Out,h:m,Time,Rate (by hour),Dollar,Budget,Approved,Status,Billable,Customer,Project,Activity,Description,Comment,Location,Track#,Username,cleared
+// Date,In,Out,h:m,Time,Rate (by hour),Dollar,Budget,Approved,Billable,Customer,Project,Activity,Description,Comment,Location,Track#,Username,cleared
 
 
 # Ensure sufficient arguments.
@@ -55,19 +55,20 @@ $rows = array();
 $sort = array();
 while ($row = fgetcsv($fp)) {
   $newrow = array();
-  // Get columns 
+  // Get columns
+
   $newrow['date'] = preg_replace('/^(\d+)\.(\d+).$/', '$2/$1/'. date('Y'), $row[0]);
   $newrow['in'] = $row[1];
   $newrow['out'] = $row[2];
   $newrow['hours'] = $row[3];
-  $newrow['customer'] = $row[11];
-  $newrow['project'] = $row[12];
-  $newrow['activity'] = $row[13];
+  $newrow['customer'] = $row[10];
+  $newrow['project'] = $row[11];
+  $newrow['activity'] = $row[12];
   $newrow['comment'] = $row[14];
   $newrow['trackingno'] = $row[16];
   $newrow['sorttimestamp'] = strtotime($newrow['date'] . ' ' . $newrow['in']);
 
-  // Sort rows by client/project/datetime
+  // Sort rows by client/activity/datetime
   $row_sort_string =
     // client
     $newrow['customer']

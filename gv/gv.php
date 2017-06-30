@@ -160,6 +160,7 @@ class GoogleVoice
     public function login()
     {
         $html = $this->curl('http://www.google.com/voice/m');
+//die($html);
 
         $action = $this->match('!<form.*?action="(.*?)"!ms', $html, 1);
 
@@ -173,6 +174,9 @@ class GoogleVoice
         }
 
         $html = $this->curl($action, $this->lastURL, $post);
+
+//FIXME: HTML here doesnt seem to be correct. Why not?
+die($html);
 
         $crumb = urlencode($this->match('!<input.*?name="_rnr_se".*?value="(.*?)"!ms', $html, 1));
         if (!$crumb) {
@@ -314,15 +318,14 @@ class GoogleVoice
             curl_setopt($ch, CURLOPT_HEADER, 1);
             $html        = curl_exec($ch);
             $header_size = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-            $this->lastURL = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
             $ret = substr($html, 0, $header_size);
         }
         else
         {
             $html = curl_exec($ch);
-            $this->lastURL = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
             $ret = $html;
         }
+        $this->lastURL = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
 
         $errors = curl_error($ch);
         if (!empty($errors)) {

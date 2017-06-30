@@ -7,7 +7,7 @@ civicrm_initialize();
 $mailing_backend = Civi::settings()->get('mailing_backend');
 $mailing_backend['outBound_option'] = 3;
 Civi::settings()->set('mailing_backend', $mailing_backend);
-
+echo "Outbound mail has been set to mail().\n";
 
 // Disable all non-dummy processors.
 $result = civicrm_api3('PaymentProcessor', 'get', array(
@@ -20,4 +20,6 @@ foreach ($result['values'] as $value) {
     'is_active' => 0,
   );
   civicrm_api3('PaymentProcessor', 'create', $params);
-} 
+  echo "Disabled payment processor id#$id (${value['name']}).\n";
+
+}

@@ -17,7 +17,7 @@ function setup() {
     fatal('Missing configuration. See "CONFIGURATION" in README.md.');
   }
   require_once($config_file);
-  if (!defined('UPSTREAM_DIR') || !is_dir(UPSTREAM_DIR) || !file_exists(UPSTREAM_DIR . '/kimaiversion.php')) {
+  if (!defined('UPSTREAM_DIR') || !is_dir(UPSTREAM_DIR) || !file_exists(UPSTREAM_DIR . '/kimai.json')) {
     fatal('Bad configuration. See "CONFIGURATION" in README.md. Is UPSTREAM_DIR correct?');
   }
 }
@@ -67,7 +67,7 @@ function apply_data_or_die($data) {
       $query_status_counts[0]++;
     }
     else {
-      $query = "UPDATE kimai_zef SET zef_trackingnr = '$zef_trackingnr' WHERE zef_in = '$zef_in'";
+      $query = "UPDATE kimai_timeSheet SET trackingNumber = '$zef_trackingnr' WHERE start = '$zef_in'";
       $result = db_unsafe_query($query);
       $query_status_counts[$result]++;
     }

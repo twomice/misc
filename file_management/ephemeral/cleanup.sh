@@ -49,25 +49,28 @@ if [[ -z "${BASEDIR}" || -z "${DEFAULT_MAX_AGE}" ]]; then
 fi
 
 NOWFILE=$(tempfile);
+files=$(find $BASEDIR -type f -name '.ephemeral.timestamp' ! -newer $NOWFILE);
 
 # Determine proper behavior based on $1
 if [ "$1" == "1" ]; then
-  FILE_CMD='rm -rf';
+    while read -r timesatmp_file; do
+      if [[ -e $timesatmp_file ]]; then
+        rm -rf $(dirname $timesatmp_file);
+      fi
+    done <<< "$files"
 else
-  FILE_CMD='echo';
   usage;
   echo ""
-  echo "THESE DIRECTORIES HAVE EXCEEDED THEIR MAX AGE (if any):"
-fi
+  if [[ -z "$files" ]]; then
+    echo "NO DIRECTORIES HAVE EXCEEDED THEIR MAX AGE."
+  else
+    echo "THESE DIRECTORIES HAVE EXCEEDED THEIR MAX AGE:"
+    while read -r timesatmp_file; do
+      if [[ -e $timesatmp_file ]]; then
+        dirname $timesatmp_file;
+      fi
+    done <<< "$files"
+  fi
 
-files=$(find $BASEDIR -type f -name '.ephemeral.timestamp' ! -newer $NOWFILE);
-if [[ -z "$files" ]]; then
-  echo "[NONE FOUND]"
-else
-  while read -r timesatmp_file; do
-    if [[ -e $timesatmp_file ]]; then
-      $FILE_CMD $(dirname $timesatmp_file);
-    fi
-  done <<< "$files"
 fi
 

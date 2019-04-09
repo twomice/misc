@@ -2,5 +2,6 @@
 BASEDIR=""
 
 # When delete_age is not specified at the command line on creating a new directory,
-# use this relative timespan. Default is 24 hours from creation time.
+# use this relative timespan. Default is 24 hours from creation time. Must be a
+# string suitable for use as the -d argument to `date`.
 DEFAULT_MAX_AGE="24hours"

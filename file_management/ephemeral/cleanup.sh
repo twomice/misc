@@ -28,6 +28,13 @@ function usage() {
 # instead of the one containing this script).  See http://stackoverflow.com/a/246128
 mydir="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
 
+# Reject root. This script uses `rm -rf`. We also enforce the same limitation in
+# in create.sh.
+if [ "$(id -u)" == "0" ]; then
+	err "You may not run $0 as root.";
+	exit 1;
+fi
+
 # Source config file or exit.
 if [ -e ${mydir}/config.sh ]; then
   source ${mydir}/config.sh

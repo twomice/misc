@@ -1,0 +1,6 @@
+# Directory to contain ephemeral file directories.
+BASEDIR=""
+
+# When delete_age is not specified at the command line on creating a new directory,
+# use this relative timespan. Default is 24 hours from creation time.
+DEFAULT_MAX_AGE="24hours"

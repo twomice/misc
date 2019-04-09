@@ -79,6 +79,7 @@ while ($row = fgetcsv($fp)) {
   ;
 
   $sort[] = $row_sort_string;
+  $newrow['row_sort_string'] = $row_sort_string;
   $rows[] = $newrow;
 
   unset($row);
@@ -119,6 +120,7 @@ foreach ($rows as &$row) {
     'in' => $row['in'],
     'out' => $row['out'],
     'activity' => $row['activity'],
+    'row_sort_string' => $row['row_sort_string'],
   );
 }
 unset($row);
@@ -154,7 +156,7 @@ $columns_ordered = array(
   ),
   array(
     'key' => 'extra_comment',
-    'label' => 'Comment',
+    'label' => 'Description',
   ),
   array(
     'key' => 'in',
@@ -167,6 +169,10 @@ $columns_ordered = array(
   array(
     'key' => 'comment',
     'label' => 'Original comment',
+  ),
+  array(
+    'key' => 'row_sort_string',
+    'label' => 'row_sort_string',
   ),
 );
 

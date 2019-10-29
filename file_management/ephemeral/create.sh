@@ -20,7 +20,7 @@ function usage() {
   echo "  MAX_AGE: (optional) Time, relative to creation, at which the created"
   echo "    ephemeral directory will be marked for deletion. This is a string"
   echo '    suitable for use in the -d argument to `date`, e.g., "3days". If'
-  echo '    omitted, the default value of $DEFAULT_MAX_AGE is used.'
+  echo "    omitted, the default value of ${DEFAULT_MAX_AGE} is used."
 }
 
 # Full system path to the directory containing this file, with trailing slash.

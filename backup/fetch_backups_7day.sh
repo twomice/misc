@@ -23,6 +23,7 @@ usage() {
     echo "    -n : normalize directory and file permissions to 755 for dirs and 644 for files."
 }
 
+MAXDAYS=7
 VERBOSE=0
 NORMALIZE_PERMS=0
 while getopts ":vnh" options; do
@@ -72,31 +73,8 @@ fi
 
 echo "RSYNC_OPTS: $RSYNC_OPTS"
 
-# Create the rotation directories if they don't exist.
-if [ ! -d $BACKUP_PATH ] ; then
-    mkdir $BACKUP_PATH
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.0 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.0
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.1 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.1
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.2 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.2
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.3 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.3
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.4 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.4
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.5 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.5
-fi
-if [ ! -d $BACKUP_PATH/$SOURCE_BASE.6 ] ; then
-    mkdir $BACKUP_PATH/$SOURCE_BASE.6
-fi
+# Create the LATEST rotation directory if it doesn't exist.
+mkdir -p $BACKUP_PATH/$SOURCE_BASE.LATEST
 
 # TODO All these find operations to clean up permissions is going to add a lot
 # of overhead as the backup set gets bigger. At 100 GB it's not a big deal. The
@@ -112,38 +90,47 @@ fi
 #    find $BACKUP_PATH/$SOURCE_BASE.6 -type f -exec chmod $PERMS_FILE {} \;
 #fi
 
-# Ensure all nodes in copy 6 are writable before deleting the directory. 
-# Otherwise, if some directories are not writable, files within them 
-# can't be removed, so `rm -rf` will ultimately leave the 'copy 6' 
-# directory intact.
-chmod -R u+w $BACKUP_PATH/$SOURCE_BASE.6
-rm -rf $BACKUP_PATH/$SOURCE_BASE.6
-mv     $BACKUP_PATH/$SOURCE_BASE.5 $BACKUP_PATH/$SOURCE_BASE.6
-mv     $BACKUP_PATH/$SOURCE_BASE.4 $BACKUP_PATH/$SOURCE_BASE.5
-mv     $BACKUP_PATH/$SOURCE_BASE.3 $BACKUP_PATH/$SOURCE_BASE.4
-mv     $BACKUP_PATH/$SOURCE_BASE.2 $BACKUP_PATH/$SOURCE_BASE.3
-mv     $BACKUP_PATH/$SOURCE_BASE.1 $BACKUP_PATH/$SOURCE_BASE.2
-cp -al $BACKUP_PATH/$SOURCE_BASE.0 $BACKUP_PATH/$SOURCE_BASE.1
+# Find rotations older than MAXDAYS and delete them.
+for i in $(find $BACKUP_PATH -type f -name BACKUP_TIMESTAMP -mtime +$MAXDAYS); do
+  DELETEDIR=$(dirname $i);
+  # Never delete rotation.LATEST.
+  if [[ "$DELETEDIR" = "$BACKUP_PATH/$SOURCE_BASE.LATEST" ]]; then
+    continue;
+  fi
+  echo "Deleting $DELETEDIR; over $MAXDAYS days old."
+  # Ensure all nodes in DELETEDIR are writable before deleting the directory. 
+  # Otherwise, if some directories are not writable, files within them 
+  # can't be removed, so `rm -rf` will ultimately leave the DELETEDIR intact.
+  chmod -R u+w $DELETEDIR;
+  rm -rf $DELETEDIR;
+done
+
+# Create hard-link copies of rotation.LATEST using that rotation's BACKUP_TIMESTAMP,
+# if rotation.LATEST exists (i.e., after first run)
+if [[ -f $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP ]]; then
+  TIMENAME=$(date -d @$(stat -c %.Y $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP) +%Y-%m-%d_%H%M%S.%N);
+  cp -al $BACKUP_PATH/$SOURCE_BASE.LATEST $BACKUP_PATH/$SOURCE_BASE.$TIMENAME;
+fi
 
 # Backup.
 if [[ "$NORMALIZE_PERMS" == "1" ]]; then
     if [ $VERBOSE ]; then
         echo "Normalizing file permissions."
     fi
-    find $BACKUP_PATH/$SOURCE_BASE.0 -type d -exec chmod $PERMS_DIR {} \;
-    find $BACKUP_PATH/$SOURCE_BASE.0 -type f -exec chmod $PERMS_FILE {} \;
+    find $BACKUP_PATH/$SOURCE_BASE.LATEST -type d -exec chmod $PERMS_DIR {} \;
+    find $BACKUP_PATH/$SOURCE_BASE.LATEST -type f -exec chmod $PERMS_FILE {} \;
     if [ $VERBOSE ]; then
         echo "Done normalizing file permissions."
     fi
 fi
-rsync $RSYNC_OPTS $SOURCES $BACKUP_PATH/$SOURCE_BASE.0/.
+rsync $RSYNC_OPTS $SOURCES $BACKUP_PATH/$SOURCE_BASE.LATEST/.
 RSYNC_EXIT_STATUS=$?
 if [[ "$NORMALIZE_PERMS" == "1" ]]; then
     if [ $VERBOSE ]; then
         echo "Normalizing file permissions."
     fi
-    find $BACKUP_PATH/$SOURCE_BASE.0 -type d -exec chmod $PERMS_DIR {} \;
-    find $BACKUP_PATH/$SOURCE_BASE.0 -type f -exec chmod $PERMS_FILE {} \;
+    find $BACKUP_PATH/$SOURCE_BASE.LATEST -type d -exec chmod $PERMS_DIR {} \;
+    find $BACKUP_PATH/$SOURCE_BASE.LATEST -type f -exec chmod $PERMS_FILE {} \;
 fi
 
 # Ignore error code 24, "rsync warning: some files vanished before they could be transferred".
@@ -152,14 +139,14 @@ if [ $RSYNC_EXIT_STATUS = 24 ] ; then
 fi
 
 # Create a timestamp file to show when backup process completed successfully.
-rm -f $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_ERROR
-rm -f $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_TIMESTAMP
+rm -f $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
+rm -f $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP
 if [ $RSYNC_EXIT_STATUS = 0 ] ; then
-    date > $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_TIMESTAMP
+    date > $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP
 else # Create a timestamp if there was an error.
-    echo "rsync failed" > $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_ERROR
-    date >> $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_ERROR
-    echo $RSYNC_EXIT_STATUS >> $BACKUP_PATH/$SOURCE_BASE.0/BACKUP_ERROR
+    echo "rsync failed" > $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
+    date >> $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
+    echo $RSYNC_EXIT_STATUS >> $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
 fi
 
 if [ $VERBOSE ]; then

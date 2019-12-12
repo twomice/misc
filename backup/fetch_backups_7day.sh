@@ -23,7 +23,7 @@ usage() {
     echo "    -n : normalize directory and file permissions to 755 for dirs and 644 for files."
 }
 
-MAXDAYS=7
+DEFAULT_MAXDAYS=7
 VERBOSE=0
 NORMALIZE_PERMS=0
 while getopts ":vnh" options; do
@@ -75,6 +75,19 @@ echo "RSYNC_OPTS: $RSYNC_OPTS"
 
 # Create the LATEST rotation directory if it doesn't exist.
 mkdir -p $BACKUP_PATH/$SOURCE_BASE.LATEST
+
+# Include config file if available.
+if [[ -f $BACKUP_PATH/config.sh ]]; then
+  . $BACKUP_PATH/config.sh
+  cat $BACKUP_PATH/config.sh
+fi
+# Process config values.
+MAXDAYS=${MAXDAYS:-$DEFAULT_MAXDAYS}
+# Ensure positive integer for MAXDAYS
+if [[ ! $MAXDAYS =~ ^[0-9]+$ || "$MAXDAYS" == "0" ]]; then
+  MAXDAYS=1
+fi
+
 
 # TODO All these find operations to clean up permissions is going to add a lot
 # of overhead as the backup set gets bigger. At 100 GB it's not a big deal. The

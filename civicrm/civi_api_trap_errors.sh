@@ -12,9 +12,15 @@ if [ -p /dev/stdin ]; then
   # Store lines in a string for reprint if needed.
   LINES=""
 
+  # Pattern to match PHP warnings and notices; output will be stripped of lines
+  # matching this pattern, thus preventing them from generating cron emails).
+  IGNORE_PATTERN="^PHP (Warning|Notice)\b"
   # Read the input line by line
   while IFS= read line; do
     # Add line to LINES for reprint if needed, with IFS for line-feed.
+    if [[ $line =~ $IGNORE_PATTERN ]]; then
+      continue;
+    fi
     LINES="$LINES$line$IFS"
     if [[ "$line" == *'"is_error": 0,'* ]]; then
       # CiviCRM api reported no error, so exit 0.

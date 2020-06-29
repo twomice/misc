@@ -104,7 +104,7 @@ fi
 #fi
 
 # Find rotations older than MAXDAYS and delete them.
-for i in $(find $BACKUP_PATH -type f -name BACKUP_TIMESTAMP -mtime +$MAXDAYS); do
+for i in $(find $BACKUP_PATH -maxdepth 2 -type f -name BACKUP_TIMESTAMP -mtime +$MAXDAYS); do
   DELETEDIR=$(dirname $i);
   # Never delete rotation.LATEST.
   if [[ "$DELETEDIR" = "$BACKUP_PATH/$SOURCE_BASE.LATEST" ]]; then
@@ -155,7 +155,7 @@ fi
 rm -f $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
 rm -f $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP
 if [ $RSYNC_EXIT_STATUS = 0 ] ; then
-    date > $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP
+    echo "This file's timestamp is the creation time of this backup." > $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_TIMESTAMP
 else # Create a timestamp if there was an error.
     echo "rsync failed" > $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR
     date >> $BACKUP_PATH/$SOURCE_BASE.LATEST/BACKUP_ERROR

@@ -32,7 +32,7 @@ mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases 
 database_names=$(grep -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
 for database_name in $database_names; do
   # Extract database
-  sh mysqldumpsplitter.sh --source "$single_dump_file" --extract DB --match_str "$database_name" --compression none --output_dir "$target_dir"/"$database_name"-temp
+  $mysqldumpsplitter_command --source "$single_dump_file" --extract DB --match_str "$database_name" --compression none --output_dir "$target_dir"/"$database_name"-temp
 
   # Create main folders
   mkdir "$target_dir"/"$database_name"
@@ -43,7 +43,7 @@ for database_name in $database_names; do
 
   for table in $tables; do
     # Extract table
-    sh mysqldumpsplitter.sh --source "$target_dir"/"$database_name"-temp/"$database_name".sql --extract TABLE --match_str "$table" --compression none --output_dir "$target_dir"/"$database_name"-temp/tables-temp
+    $mysqldumpsplitter_command --source "$target_dir"/"$database_name"-temp/"$database_name".sql --extract TABLE --match_str "$table" --compression none --output_dir "$target_dir"/"$database_name"-temp/tables-temp
 
     # Remove comments in database sql and copy it to the main folder
     grep -vP '^-- ' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql

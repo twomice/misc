@@ -1,0 +1,5 @@
+# MySQL root password.
+mysql_root_password=""
+
+# mysqldumpsplitter command
+mysqldumpsplitter_command="sh /usr/bin/mysqldumpsplitter.sh"

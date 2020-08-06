@@ -3,20 +3,31 @@
 # Resources:
 # Bash style guide: https://google.github.io/styleguide/shellguide.html
 # ShellCheck: https://www.shellcheck.net/
+mydir="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
 
-mysql_root_password="" # I'll be editing this line differently for each server.
+# Source config file or exit.
+if [ -e "${mydir}"/config.sh ]; then
+  source "${mydir}"/config.sh
+else
+  echo "Could not find required config file at ${mydir}/config.sh. Exiting."
+  exit 1
+fi
 
+# Make temp file for the main data
 single_dump_file=$(mktemp);
-target_dir="." # Actually, this should come from an argument on the command line.
 
 # If there is a first argument assign it to target_dir
-if [ "$1" != "" ]; then
+if [ "$#" != "1" ]; then
+  echo "Could not find directory to put the extracted data."
+  echo "Make sure to add directory as parameter ex: $(tput bold) bash dumpall.sh /target/directory. $(tput sgr0)"
+  exit 1
+else
   target_dir="$1"
 fi
 
 # dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"
-echo "$target_dir"
+
 # Get all databases names from dumpfile
 database_names=$(grep -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
 for database_name in $database_names; do

@@ -77,8 +77,8 @@ for database_name in $database_names; do
   # Remove comments starts with -- in the main database sql 
   grep -vw '^--' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
 
-  # Copy main database sql lines 1 to 22 only (CREATE DATABASE and USE only)
-  sed -n '1,22p' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
+  # Copy only the selected line base on the starting text of the line
+  grep -wE '(^CREATE DATABASE|^USE)' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
 
   # Remove databases and tables with comments
   rm -r "$target_dir"/"$database_name"-temp

@@ -75,7 +75,7 @@ for database_name in $database_names; do
   done
 
   # Remove comments in database sql and copy it to the main folder
-  grep -vP '^-- ' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"/"$database_name".sql
+  grep -vP '^-- ' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"/database.sql
 
   # Remove databases and tables with comments
   rm -r "$target_dir"/"$database_name"-temp

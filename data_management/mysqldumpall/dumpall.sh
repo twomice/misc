@@ -70,12 +70,12 @@ for database_name in $database_names; do
     # Extract table
     $mysqldumpsplitter_command --source "$target_dir"/"$database_name"-temp/"$database_name".sql --extract TABLE --match_str "$table" --compression none --output_dir "$target_dir"/"$database_name"-temp/tables-temp
 
-    # Remove comments in database sql and copy it to the main folder
-    grep -vP '^-- ' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
+    # Remove comments starts with -- in database sql
+    grep -vw '^--' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
   done
 
-  # Remove comments in the main database sql
-  grep -vP '^-- ' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
+  # Remove comments starts with -- in the main database sql 
+  grep -vw '^--' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
 
   # Copy main database sql lines 1 to 22 only (CREATE DATABASE and USE only)
   sed -n '1,22p' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql

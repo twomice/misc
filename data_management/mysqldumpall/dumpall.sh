@@ -16,15 +16,40 @@ fi
 # Make temp file for the main data
 single_dump_file=$(mktemp);
 
-# If there is a first argument assign it to target_dir
-if [ "$#" != "1" ]; then
+# If there is an arguments assign it to target_dir
+if [ "$#" -lt "1" ]; then
   echo "Could not find directory to put the extracted data."
   echo "Make sure to add directory as parameter ex: $(tput bold) bash dumpall.sh /target/directory. $(tput sgr0)"
   exit 1
 else
-  target_dir="$1"
+  if [ -z "$2" ]; then
+    target_dir="$1"
+  else
+    target_dir="$2"
+  fi
 fi
 
+# Prompt user if directory exist and [-f] is not in the argument
+if [[ -e "$target_dir" ]] && [ "$1" != "[-f]" ]; then
+  echo "The directory already exist."
+  echo "Do you want to delete all files in the directory? [Y/n]"
+  read confirm_delete
+  case $confirm_delete in
+    [yY] | [yY][Ee][Ss] )
+      echo "Deleting and re-installing."
+      ;;
+    [nN] | [nN][Oo] )
+      echo "Exiting.";
+      exit 1
+      ;;
+     *) echo "Invalid input. Please enter 'yes' or 'no'."
+      exit 1
+      ;;
+  esac
+fi
+
+# Delete directory
+sudo rm -rf $target_dir
 # dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"
 

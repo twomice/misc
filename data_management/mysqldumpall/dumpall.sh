@@ -88,4 +88,5 @@ for database_name in $database_names; do
   rm -r "$target_dir"/"$database_name"-temp
 done
 
-
+# Remove temp file of main data
+rm "$single_dump_file"

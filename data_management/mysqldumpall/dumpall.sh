@@ -30,7 +30,7 @@ else
 fi
 
 # Prompt user if directory exist and [-f] is not in the argument
-if [[ -e "$target_dir" ]] && [ "$1" != "[-f]" ]; then
+if [[ -e "$target_dir" ]] && [ "$1" != "-f" ]; then
   echo "The directory already exist."
   echo "Do you want to delete all files in the directory? [Y/n]"
   read -r confirm_delete

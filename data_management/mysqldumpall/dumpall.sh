@@ -33,7 +33,7 @@ fi
 if [[ -e "$target_dir" ]] && [ "$1" != "[-f]" ]; then
   echo "The directory already exist."
   echo "Do you want to delete all files in the directory? [Y/n]"
-  read confirm_delete
+  read -r confirm_delete
   case $confirm_delete in
     [yY] | [yY][Ee][Ss] )
       echo "Deleting and re-installing."
@@ -49,10 +49,10 @@ if [[ -e "$target_dir" ]] && [ "$1" != "[-f]" ]; then
 fi
 
 # Delete directory
-rm -rf $target_dir
+rm -rf "$target_dir"
 
 # Add the target directory after delete
-mkdir -p $target_dir
+mkdir -p "$target_dir"
 
 # dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"

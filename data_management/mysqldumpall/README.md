@@ -12,7 +12,7 @@ A mysqldump that create database dumps in a certain way.
 ============================
 ## USAGE:
 ```bash
-bash dumpall.sh [-f] TARGET_DIRECTORY
+bash dumpall.sh -f TARGET_DIRECTORY
 ```
 
 **TARGET_DIRECTORY**: Full system path to a directory where you want to extract the database dumps. If this directory doesn't exist, it will be created. If it exists, any existing files or directories inside it will be deleted (see -f).

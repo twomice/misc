@@ -50,6 +50,10 @@ fi
 
 # Delete directory
 rm -rf $target_dir
+
+# Add the target directory after delete
+mkdir -p $target_dir
+
 # dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"
 

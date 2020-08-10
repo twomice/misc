@@ -49,7 +49,7 @@ if [[ -e "$target_dir" ]] && [ "$1" != "[-f]" ]; then
 fi
 
 # Delete directory
-sudo rm -rf $target_dir
+rm -rf $target_dir
 # dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"
 

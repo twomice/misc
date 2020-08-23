@@ -60,7 +60,7 @@ mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases 
 
 # Get all databases names from dumpfile
 echo Get all databases names from dumpfile
-database_names=$(grep -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
+database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
 for database_name in $database_names; do
   # Extract database
   echo Extract database $database_name
@@ -73,7 +73,7 @@ for database_name in $database_names; do
 
   # Get all table names from database file
   echo Get all table names from database file
-  tables=$(grep -P '^-- Table structure for table ' "$target_dir"/"$database_name"-temp/"$database_name".sql | awk '{ print $NF }' | sed 's/`//g');
+  tables=$(grep --text -P '^-- Table structure for table ' "$target_dir"/"$database_name"-temp/"$database_name".sql | awk '{ print $NF }' | sed 's/`//g');
 
   for table in $tables; do
     # Extract table
@@ -82,15 +82,15 @@ for database_name in $database_names; do
 
     # Remove comments starts with -- in table sql
     echo Remove comments starts with -- in table sql $database_name.$table
-    grep -vw '^--' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
+    grep -vw --text '^--' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
   done
 
   # Remove comments starts with -- in the main database sql 
   echo Remove comments starts with -- in the main database sql $database_name
-  grep -vw '^--' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
+  grep -vw --text '^--' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
 
   # Copy only the selected line base on the starting text of the line
-  grep -wE '(^CREATE DATABASE|^USE)' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
+  grep --text -wE '(^CREATE DATABASE|^USE)' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
 
   # Remove databases and tables with comments
   echo Remove databases and tables with comments $database_name

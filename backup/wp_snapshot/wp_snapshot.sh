@@ -28,10 +28,10 @@ tar --exclude="${wp_root_basename}/wp-content/updraft" -czf $DIRNAME/files.tgz "
 
 echo "Archiving databases ..."
 echo "  Wordpress ..."
-mysqldump -u $mysql_user --password="$mysql_password" $mysql_database_wordpress | gzip > $DIRNAME/mha_wp.sql.gz
+mysqldump -u $mysql_user --password="$mysql_password" $mysql_database_wordpress | gzip > $DIRNAME/wp.sql.gz
 if [[ -n $mysql_database_civicrm ]]; then
   echo "  CiviCRM..."
-  mysqldump -u $mysql_user --password="$mysql_password" $mysql_database | gzip > $DIRNAME/mha_civicrm.sql.gz
+  mysqldump -u $mysql_user --password="$mysql_password" $mysql_database | gzip > $DIRNAME/civicrm.sql.gz
 fi
 
 echo "Done. Target dir: $DIRNAME";

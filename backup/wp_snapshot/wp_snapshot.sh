@@ -22,6 +22,7 @@ mkdir -p $DIRNAME;
 
 echo "Archiving files ..."
 cd $wp_root_dir;
+cd ..
 wp_root_basename=$(basename $wp_root_dir);
 tar --exclude="${wp_root_basename}/wp-content/updraft" -czf $DIRNAME/files.tgz "$wp_root_basename"; 
 

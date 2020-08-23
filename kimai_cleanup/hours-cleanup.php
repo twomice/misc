@@ -233,11 +233,9 @@ foreach ($rows as $row) {
   }
 }
 
-$consolidated_file = "$tmp/{$file_prefix}_consolidated.csv";
-echo "Consolidated data: $consolidated_file\n";
-$op = fopen($consolidated_file, 'w');
-fputcsv($op, $header_row);
-
+// Consolidate rows.
+$sort = [];
+$consolidated_rows = [];
 foreach($date_activities as $client => $dates) {
   foreach($dates as $date => $activities) {
     foreach($activities as $activity) {
@@ -250,12 +248,26 @@ foreach($date_activities as $client => $dates) {
         foreach ($columns_ordered as $column) {
           $row[] = $comment_row[$column['key']];
         }
+        // Prepare to sort rows by row_sort_string;
+        $consolidated_rows[] = $row;
+        $sort[] = $comment_row['row_sort_string'];
 
-        fputcsv($op, $row);
       }
     }
   }
 }
+
+// Sort rows by row_sort_string;
+array_multisort($sort, $consolidated_rows);
+// Write rows to 'consolidated' file.
+$consolidated_file = "$tmp/{$file_prefix}_consolidated.csv";
+echo "Consolidated data: $consolidated_file\n";
+$op = fopen($consolidated_file, 'w');
+fputcsv($op, $header_row);
+foreach ($consolidated_rows as $row) {
+  fputcsv($op, $row);
+}
+
 
 echo "\nLazy command line for OpenOffice users:\n";
 echo "oocalc $cleaned_file $consolidated_file\n\n";

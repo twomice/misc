@@ -13,7 +13,8 @@ if [ -p /dev/stdin ]; then
   LINES=""
 
   # Pattern to match PHP warnings and notices; output will be stripped of lines
-  # matching this pattern, thus preventing them from generating cron emails).
+  # matching this pattern, thus preventing them from generating cron emails. 
+  # Note this will really only be helpful if stderr is redirected to stdin.
   IGNORE_PATTERN="^PHP (Warning|Notice)\b"
   # Read the input line by line
   while IFS= read line; do

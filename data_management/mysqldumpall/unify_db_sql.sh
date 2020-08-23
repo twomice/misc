@@ -25,9 +25,6 @@ if [[ "$#" -lt "1" ]]; then
 fi
 
 db_dir="$1"
-if [[ -n "$2" ]]; then
-  target_db_name="$2"
-fi
 
 if [[ ! -d "$db_dir" ]]; then
   echo "ERROR: Could not find DATABASE_DIRECTORY $db_dir" >&2
@@ -38,41 +35,53 @@ if [[ ! -f "$db_dir/database.sql" ]]; then
   exit 1;
 fi
 
-if [[ -z "$target_db_name" ]]; then
+if [[ -z "$2" ]]; then
   # TARGET_DB_NAME not given. Use original db name.
-  # Because older versions of dumpall.sh don't include DROP DATABASE, we'll add that here.
-  original_db_name=$(basename "$db_dir");
-
-  # Make temp file for the main data, using original db name.
-  sqlfile=$(mktemp --tmpdir "${original_db_name}-XXXXXXX.sql");
-  
-  echo "DROP DATABASE IF EXISTS \`$original_db_name\`;" >> "$sqlfile"
-  grep -v 'DROP DATABASE' "$db_dir/database.sql" >> "$sqlfile";
-elif [[ "$target_db_name" != "-" ]]; then
+  target_db_name=$(basename "$db_dir");
+elif [[ "$2" != "-" ]]; then
   # TARGET_DB_NAME is a string other than '-'; use this name.
-  # Make temp file for the main data, using specified db name.
+  target_db_name="$2"; 
+fi
+
+if [[ -n "$target_db_name" ]]; then
+  # We have a target db name, so use it in the sql filename, and seed that
+  # file with database-level sql statements.
   sqlfile=$(mktemp --tmpdir "${target_db_name}-XXXXXXX.sql");
   echo "DROP DATABASE IF EXISTS \`$target_db_name\`;" >> "$sqlfile"
   echo "CREATE DATABASE /*!32312 IF NOT EXISTS*/ \`$target_db_name\` /*!40100 DEFAULT CHARACTER SET utf8mb4 */;" >> "$sqlfile";
   echo "USE \`$target_db_name\`;" >> "$sqlfile";
-  
 else
-  # TARGET_DB_NAME is '-'; don't specify a db name.
-  # Make temp file for the main data, using no specified db name.
+  # Don't use a target db name. Create an sql file with generic name and
+  # no db-level statements.
   sqlfile=$(mktemp --tmpdir "XXXXXXX.sql");
   echo "No db name will be used." >&2
 fi
 
+# Disable autocommit for faster imports
+echo "set AUTOCOMMIT = 0;" >> "$sqlfile";
+
 # add table sql.
 for i in $(ls "$db_dir"/tables/); do 
   echo "  adding $db_dir/tables/$i" >&2
-  sed 's#^/\*!50003 CREATE\*/ /\*!50017 DEFINER=`[^`]*`@`[^`]*`\*/#/*!50003 CREATE*/#g' "$db_dir"/tables/"$i" >> "$sqlfile"
+  tablefile=$(mktemp);
+  sed 's#^/\*!50003 CREATE\*/ /\*!50017 DEFINER=`[^`]*`@`[^`]*`\*/#/*!50003 CREATE*/#g' "$db_dir"/tables/"$i" >> "$tablefile"
+  # Until https://github.com/twomice/misc/issues/7 is solved, sql files may have
+  # spurious `USE` statements, which will reference the wrong database if we're not
+  # using the original db name. Strip that.
+  sed -i '/^USE /d' "$tablefile"
+  cat "$tablefile" >> "$sqlfile"
+  rm $tablefile;
 done
 
 # We've used sed to remove DEFINER from triggers and such, but some databases also
 # contain `SQL SECURITY DEFINER` (on a single line) which specify DEFINER names.
 # Remove those also.
 sed -i '/DEFINER/d' "$sqlfile"
+
+# Since we disabled autocommit above, add a commit statement to write all.
+echo "COMMIT;" >> "$sqlfile";
+
 echo "Created sql file:" >&2
 echo "$sqlfile"; 
 exit 0;
+

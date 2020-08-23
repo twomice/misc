@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Full path to directory containing wordpress index.php
+wp_root_dir=""
+
+# Directory to contain all backups (each backup is stored in its own directory therein)
+backup_dir=""
+
+# Mysql connnection details for wp and civicrm.
+# Civicrm and WP DBs are assumed to have the same username/password.
+mysql_password="";
+mysql_user="";
+mysql_database_wordpress="";
+mysql_database_civicrm="";

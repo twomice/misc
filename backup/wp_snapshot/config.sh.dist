@@ -11,4 +11,6 @@ backup_dir=""
 mysql_password="";
 mysql_user="";
 mysql_database_wordpress="";
+
+# If civcirm uses the same db with wordpress, leave this setting empty:
 mysql_database_civicrm="";

@@ -58,6 +58,9 @@ mkdir -p "$target_dir"
 echo Dump all mysqldatabases to a single file in a single transaction
 mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases > "$single_dump_file"
 
+# remove temp file if canceled
+trap "rm -f $single_dump_file" EXIT
+
 # Get all databases names from dumpfile
 echo Get all databases names from dumpfile
 database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');

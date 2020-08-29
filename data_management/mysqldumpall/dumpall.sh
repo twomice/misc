@@ -93,12 +93,8 @@ for database_name in $database_names; do
     grep -vw --text '^--' "$tmp_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
   done
 
-  # Remove comments starts with -- in the main database sql 
-  echo Remove comments starts with -- in the main database sql $database_name
-  grep -vw --text '^--' "$tmp_dir"/"$database_name"-temp/"$database_name".sql > "$tmp_dir"/"$database_name"-temp/database.sql
-
   # Copy only the selected line base on the starting text of the line
-  grep --text -wE '(^CREATE DATABASE|^USE)' "$tmp_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
+  grep --text -wE '(^CREATE DATABASE|^USE)' "$tmp_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"/database.sql
 
   # Remove databases and tables with comments
   echo Remove databases and tables with comments $database_name
@@ -106,4 +102,4 @@ for database_name in $database_names; do
 done
 
 # Remove temp folder
-rm "$tmp_dir"
+rm -r "$tmp_dir"

@@ -14,3 +14,6 @@ mysql_database_wordpress="";
 
 # If civcirm uses the same db with wordpress, leave this setting empty:
 mysql_database_civicrm="";
+
+# Set this to "1" to use sudo when  backing up files.
+use_sudo=""

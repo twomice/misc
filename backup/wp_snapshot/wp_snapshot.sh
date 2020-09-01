@@ -31,7 +31,7 @@ echo "  Wordpress ..."
 mysqldump -u $mysql_user --password="$mysql_password" $mysql_database_wordpress | gzip > $DIRNAME/wp.sql.gz
 if [[ -n $mysql_database_civicrm ]]; then
   echo "  CiviCRM..."
-  mysqldump -u $mysql_user --password="$mysql_password" $mysql_database | gzip > $DIRNAME/civicrm.sql.gz
+  mysqldump -u $mysql_user --password="$mysql_password" $mysql_database_civicrm | gzip > $DIRNAME/civicrm.sql.gz
 fi
 
 echo "Done. Target dir: $DIRNAME";

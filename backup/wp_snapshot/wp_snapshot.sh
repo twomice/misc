@@ -20,11 +20,17 @@ echo "Target dir: $DIRNAME";
 
 mkdir -p $DIRNAME;
 
+if [[ "$use_sudo" == "1" ]]; then
+  sudocmd="sudo"
+  echo "Acquiring sudo access ..."
+  sudo echo "Thank you."
+fi
+
 echo "Archiving files ..."
 cd $wp_root_dir;
 cd ..
 wp_root_basename=$(basename $wp_root_dir);
-tar --exclude="${wp_root_basename}/wp-content/updraft" -czf $DIRNAME/files.tgz "$wp_root_basename"; 
+$sudocmd tar --exclude="${wp_root_basename}/wp-content/updraft" -czf $DIRNAME/files.tgz "$wp_root_basename";
 
 echo "Archiving databases ..."
 echo "  Wordpress ..."
@@ -35,4 +41,3 @@ if [[ -n $mysql_database_civicrm ]]; then
 fi
 
 echo "Done. Target dir: $DIRNAME";
-

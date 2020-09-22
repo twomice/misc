@@ -22,7 +22,7 @@ trap 'rm -rf "$tmp_dir"' EXIT
 
 # Make temp file for the main data
 single_dump_file=$(mktemp --tmpdir=$tmp_dir);
-echo "$single_dump_file"
+echo "Temp sqldump: $single_dump_file"
 
 # If there is an arguments assign it to target_dir
 if [ "$#" -lt "1" ]; then
@@ -68,14 +68,15 @@ mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases 
 
 # Get all databases names from dumpfile
 echo Get all databases names from dumpfile
-database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
+database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g'  | sort | uniq );
+echo "Found databases:  $database_names"
 for database_name in $database_names; do
   # Extract database
   echo Extract database $database_name
   $mysqldumpsplitter_command --source "$single_dump_file" --extract DB --match_str "$database_name" --compression none --output_dir "$tmp_dir"/"$database_name"-temp >&2
 
   # Create main folders
-  echo Create main folders
+  echo "Create main folders for db: $database_name"
   mkdir "$target_dir"/"$database_name"
   mkdir "$target_dir"/"$database_name"/tables
 

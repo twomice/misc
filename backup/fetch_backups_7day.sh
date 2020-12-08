@@ -65,10 +65,10 @@ SOURCE_BASE="rotation"
 PERMS_DIR=755
 PERMS_FILE=644
 if [ $VERBOSE ]; then
-    RSYNC_OPTS="-azR --delete -v"
+    RSYNC_OPTS="-azR --delete --checksum -v"
     date
 else
-    RSYNC_OPTS="-azR --delete -q"
+    RSYNC_OPTS="-azR --delete --checksum -q"
 fi
 
 echo "RSYNC_OPTS: $RSYNC_OPTS"

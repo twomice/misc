@@ -13,8 +13,12 @@ else
   exit 1
 fi
 
+if [[ -z "$tempdir_base" ]]; then
+  tempdir_base="/tmp"
+fi
+
 # Make temp folder for temporary files
-tmp_dir=$(mktemp -d)
+tmp_dir=$(mktemp -d $tempdir_base/XXXXXX)
 echo "$tmp_dir"
 
 # Remove temp folder if canceled

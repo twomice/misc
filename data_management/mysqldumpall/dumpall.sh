@@ -13,8 +13,20 @@ else
   exit 1
 fi
 
+if [[ -z "$tempdir_base" ]]; then
+  tempdir_base="/tmp"
+fi
+
+# Make temp folder for temporary files
+tmp_dir=$(mktemp -d $tempdir_base/XXXXXX)
+echo "$tmp_dir"
+
+# Remove temp folder if canceled
+trap 'rm -rf "$tmp_dir"' EXIT
+
 # Make temp file for the main data
-single_dump_file=$(mktemp);
+single_dump_file=$(mktemp --tmpdir=$tmp_dir);
+echo "Temp sqldump: $single_dump_file"
 
 # If there is an arguments assign it to target_dir
 if [ "$#" -lt "1" ]; then
@@ -60,42 +72,39 @@ mysqldump -u root -p"$mysql_root_password" --single-transaction --all-databases 
 
 # Get all databases names from dumpfile
 echo Get all databases names from dumpfile
-database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g');
+database_names=$(grep --text -P '^-- Current Database' "$single_dump_file" | awk '{ print $NF }' | sed 's/`//g'  | sort | uniq );
+echo "Found databases:  $database_names"
 for database_name in $database_names; do
   # Extract database
   echo Extract database $database_name
-  $mysqldumpsplitter_command --source "$single_dump_file" --extract DB --match_str "$database_name" --compression none --output_dir "$target_dir"/"$database_name"-temp >&2
+  $mysqldumpsplitter_command --source "$single_dump_file" --extract DB --match_str "$database_name" --compression none --output_dir "$tmp_dir"/"$database_name"-temp >&2
 
   # Create main folders
-  echo Create main folders
+  echo "Create main folders for db: $database_name"
   mkdir "$target_dir"/"$database_name"
   mkdir "$target_dir"/"$database_name"/tables
 
   # Get all table names from database file
   echo Get all table names from database file
-  tables=$(grep --text -P '^-- Table structure for table ' "$target_dir"/"$database_name"-temp/"$database_name".sql | awk '{ print $NF }' | sed 's/`//g');
+  tables=$(grep --text -P '^-- Table structure for table ' "$tmp_dir"/"$database_name"-temp/"$database_name".sql | awk '{ print $NF }' | sed 's/`//g');
 
   for table in $tables; do
     # Extract table
     echo Extract table $database_name.$table
-    $mysqldumpsplitter_command --source "$target_dir"/"$database_name"-temp/"$database_name".sql --extract TABLE --match_str "$table" --compression none --output_dir "$target_dir"/"$database_name"-temp/tables-temp >&2
+    $mysqldumpsplitter_command --source "$tmp_dir"/"$database_name"-temp/"$database_name".sql --extract TABLE --match_str "$table" --compression none --output_dir "$tmp_dir"/"$database_name"-temp/tables-temp >&2
 
     # Remove comments starts with -- in table sql
     echo Remove comments starts with -- in table sql $database_name.$table
-    grep -vw --text '^--' "$target_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
+    grep -vw --text '^--' "$tmp_dir"/"$database_name"-temp/tables-temp/"$table".sql > "$target_dir"/"$database_name"/tables/"$table".sql
   done
 
-  # Remove comments starts with -- in the main database sql 
-  echo Remove comments starts with -- in the main database sql $database_name
-  grep -vw --text '^--' "$target_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"-temp/database.sql
-
   # Copy only the selected line base on the starting text of the line
-  grep --text -wE '(^CREATE DATABASE|^USE)' "$target_dir"/"$database_name"-temp/database.sql > "$target_dir"/"$database_name"/database.sql
+  grep --text -wE '(^CREATE DATABASE|^USE)' "$tmp_dir"/"$database_name"-temp/"$database_name".sql > "$target_dir"/"$database_name"/database.sql
 
   # Remove databases and tables with comments
   echo Remove databases and tables with comments $database_name
-  rm -r "$target_dir"/"$database_name"-temp
+  rm -r "$tmp_dir"/"$database_name"-temp
 done
 
-# Remove temp file of main data
-rm "$single_dump_file"
+# Remove temp folder
+rm -r "$tmp_dir"

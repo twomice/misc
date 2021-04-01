@@ -3,3 +3,6 @@ mysql_root_password=""
 
 # mysqldumpsplitter command
 mysqldumpsplitter_command=""
+
+# tempdir location (if empty, /tmp will be used)
+tempdir_base="/tmp"

@@ -14,7 +14,7 @@
 # $Id: rsync_backup 222 2008-02-21 22:05:30Z noah $
 
 usage() {
-    echo "usage: rsync_backup [-v] [-n] BACKUP_PATH SOURCE_PATH [SOURCE_PATH [...]]"
+    echo "usage: $0 [-v] [-n] BACKUP_PATH SOURCE_PATH [SOURCE_PATH [...]]"
     echo "    SOURCE_PATH and BACKUP_PATH may be ssh-style remote paths; although,"
     echo "    BACKUP_PATH is usually a local directory where you want the"
     echo "    backup set stored."
@@ -65,10 +65,10 @@ SOURCE_BASE="rotation"
 PERMS_DIR=755
 PERMS_FILE=644
 if [ $VERBOSE ]; then
-    RSYNC_OPTS="-azR --delete -v"
+    RSYNC_OPTS="-azR --delete --checksum -v"
     date
 else
-    RSYNC_OPTS="-azR --delete -q"
+    RSYNC_OPTS="-azR --delete --checksum -q"
 fi
 
 echo "RSYNC_OPTS: $RSYNC_OPTS"

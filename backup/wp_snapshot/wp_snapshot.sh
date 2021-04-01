@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e;
 
 # Resources:
 # Bash style guide: https://google.github.io/styleguide/shellguide.html

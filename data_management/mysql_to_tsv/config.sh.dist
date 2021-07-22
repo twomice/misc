@@ -1,0 +1,12 @@
+# Configuration file for mysql_export_all_to_csv.sh
+#
+# Copy this file to config.sh, then edit per comments below.
+
+
+# mysql user to connect -- probably should be the root user
+MYSQL_USER_NAME="root"
+
+# mysql password for the above user
+MYSQL_USER_PASS=""
+
+

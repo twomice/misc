@@ -6,14 +6,18 @@ wp_root_dir=""
 # Directory to contain all backups (each backup is stored in its own directory therein)
 backup_dir=""
 
-# Mysql connnection details for wp and civicrm.
-# Civicrm and WP DBs are assumed to have the same username/password.
+# Mysql connnection details for WordPress.
+# If civicrm and WP DBs have different username/password, set civicrm DB credentials farther below.
 mysql_password="";
 mysql_user="";
 mysql_database_wordpress="";
 
 # If civcirm uses the same db with wordpress, leave this setting empty:
 mysql_database_civicrm="";
+
+# If civicrm db uses same username/password with wordpress, leave these empty:
+mysql_password_civicrm="";
+mysql_user_civicrm="";
 
 # Set this to "1" to use sudo when  backing up files.
 use_sudo=""

@@ -33,7 +33,7 @@ $sudocmd tar --exclude="${wp_root_basename}/wp-content/updraft" -czf $DIRNAME/fi
 
 echo "Archiving databases ..."
 echo "  Wordpress ..."
-mysqldump -u $mysql_user --password="$mysql_password" --no-tablespaces $mysql_database_wordpress | gzip > $DIRNAME/wp.sql.gz
+mysqldump -u $mysql_user --password="$mysql_password" --no-tablespaces --routines $mysql_database_wordpress | gzip > $DIRNAME/wp.sql.gz
 if [[ -n $mysql_database_civicrm ]]; then
   if [[ -z "$mysql_user_civicrm" ]]; then
     mysql_user_civicrm="$mysql_user";
@@ -42,7 +42,7 @@ if [[ -n $mysql_database_civicrm ]]; then
     mysql_password_civicrm="$mysql_password";
   fi
   echo "  CiviCRM..."
-  mysqldump -u $mysql_user_civicrm --password="$mysql_password_civicrm" --no-tablespaces $mysql_database_civicrm | gzip > $DIRNAME/civicrm.sql.gz
+  mysqldump -u $mysql_user_civicrm --password="$mysql_password_civicrm" --no-tablespaces --routines $mysql_database_civicrm | gzip > $DIRNAME/civicrm.sql.gz
 fi
 
 echo "Done. Target dir: $DIRNAME";

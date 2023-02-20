@@ -13,21 +13,6 @@ else
   exit 1
 fi
 
-if [[ -z "$tempdir_base" ]]; then
-  tempdir_base="/tmp"
-fi
-
-# Make temp folder for temporary files
-tmp_dir=$(mktemp -d $tempdir_base/XXXXXX)
-echo "$tmp_dir"
-
-# Remove temp folder if canceled
-trap 'rm -rf "$tmp_dir"' EXIT
-
-# Make temp file for the main data
-single_dump_file=$(mktemp --tmpdir=$tmp_dir);
-echo "Temp sqldump: $single_dump_file"
-
 # If there is an arguments assign it to target_dir
 if [ "$#" -lt "1" ]; then
   echo "Could not find directory to put the extracted data."
@@ -43,7 +28,7 @@ fi
 
 # Prompt user if directory exist and [-f] is not in the argument
 if [[ -e "$target_dir" ]] && [ "$1" != "-f" ]; then
-  echo "The directory already exist."
+  echo "The directory already exists: $target_directory"
   echo "Do you want to delete all files in the directory? [Y/n]"
   read -r confirm_delete
   case $confirm_delete in
@@ -65,6 +50,31 @@ rm -rf "$target_dir"
 
 # Add the target directory after delete
 mkdir -p "$target_dir"
+
+if [[ "$fast_backups" == "1" ]]; then
+  single_dump_file="$target_dir/all_databases.sql.gz"
+  echo 'Dump all mysqldatabases to a single file in a single transaction; store in single *sql.gzip file';
+  mysqldump --routines -u root -p"$mysql_root_password" --single-transaction --all-databases | gzip > "$single_dump_file"
+  echo "All databses dumped to $single_dump_file";
+else
+
+
+# Prepare for per-file dump creation.
+if [[ -z "$tempdir_base" ]]; then
+  tempdir_base="/tmp"
+fi
+
+# Make temp folder for temporary files
+tmp_dir=$(mktemp -d $tempdir_base/XXXXXX)
+echo "$tmp_dir"
+
+# Remove temp folder if canceled
+trap 'rm -rf "$tmp_dir"' EXIT
+
+# Make temp file for the main data
+single_dump_file=$(mktemp --tmpdir=$tmp_dir);
+echo "Temp sqldump: $single_dump_file"
+
 
 # dump all mysqldatabases to a single file in a single transaction
 echo Dump all mysqldatabases to a single file in a single transaction
@@ -108,3 +118,5 @@ done
 
 # Remove temp folder
 rm -r "$tmp_dir"
+
+fi

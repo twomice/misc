@@ -6,3 +6,10 @@ mysqldumpsplitter_command=""
 
 # tempdir location (if empty, /tmp will be used)
 tempdir_base="/tmp"
+
+# Faster backups. (Do not split databases and table into separate files,
+# which has some benefit for disk-space conservation under certain hard-link-driven
+# backup methodologies, but is prohibitively slow on larger databases).
+# Value "1" is TRUE; all other values (or lack of a value) are FALSE.
+fast_backups=""
+

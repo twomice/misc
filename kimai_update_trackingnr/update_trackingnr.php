@@ -56,26 +56,44 @@ function status($message) {
 
 function apply_data_or_die($data) {
   $query_status_counts = array(
-    TRUE => 0,
-    FALSE => 0,
+    'skip' => 0,
+    'success' => 0,
+    'none' => 0,
   );
   $db = db_connect();
   foreach ($data as $id => $row) {
     $zef_in = (int)$row['zef_in'];
+    $checkQuery = "select timeEntryId from kimai_timeSheet WHERE start = '$zef_in'";
+    $checkResult = db_unsafe_query($checkQuery);
+    $checkCount = mysqli_num_rows($checkResult);
+    if (!$checkCount) {
+      $query_status_counts['none']++;
+      $noStatusZefIns[] = $zef_in;
+      // There's no matching time entry, so just skip this row.
+      continue;
+    }
+
     $zef_trackingnr = mysqli_real_escape_string($db, $row['zef_trackingnr']);
     if ($zef_trackingnr === NULL) {
-      $query_status_counts[0]++;
+      $query_status_counts['skip']++;
     }
     else {
       $query = "UPDATE kimai_timeSheet SET trackingNumber = '$zef_trackingnr' WHERE start = '$zef_in'";
       $result = db_unsafe_query($query);
-      $query_status_counts[$result]++;
+      $query_status_counts['success']++;
     }
   }
   $status = "Query results
-    SUCCESS: {$query_status_counts[1]}
-    FAILURE: {$query_status_counts[0]}
+    SUCCESS: {$query_status_counts['success']}
+    SKIPPED: {$query_status_counts['skip']}
+    INEFFECTIVE: {$query_status_counts['none']}
   ";
+  if ($query_status_counts['none']) {
+    $status .= "<br>The following zef_in values were INEFFECTIVE (did not match any time entries):<br>";
+    foreach ($noStatusZefIns as $noStatusZefIn) {
+      $status .= "{$noStatusZefIn}<br>";
+    }
+  }
   status(nl2br($status));
 }
 
@@ -191,7 +209,7 @@ function verify_ssl_or_die() {
 function print_form_and_die($vars = array()) {
   $error_html = '';
   $status_html = '';
-  
+
   if (!empty($vars['error'])) {
     $error_html = '<div class="error">'. $vars['error'] . '</div>';
   }

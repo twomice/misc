@@ -3,12 +3,16 @@
 <html>
 <head>
   <style>
-    td.bool-false{font-weight:bold; color: red;} 
+    td.bool-false{font-weight:bold; color: red;}
     td.bool-true{font-weight: bold; color: green;}
     th {font-weight: bold; background:lightgray;}
     table {border-collapse: collapse;}
     td, th {text-align: left; padding: .25em; border: 1px solid lightgrey;}
     iframe {width: 100%; border: 0;  height: 1000000px;}
+    .message-group-header {
+      background: whitesmoke;
+      font-weight: bold;
+    }
   </style>
   <title>PHP Tests</title>
 </head>
@@ -16,39 +20,47 @@
 <h2>session test</h2>
 (reload to ensure that session vars increment, and session id remains constant.)<br>
 <strong>NOTE: proper session handling probably depends on using https.</strong>  If this site requires sessions over insecure http , disable the <em>session.cookie_httponly</em> and <em>session.cookie_secure</em> settings in PHP.<br>
-<?php 
+<?php
   $statusMessages=[];
-  
-  session_start(); 
-  
+
+  session_start();
+
   $dir = realpath(dirname($_SERVER["SCRIPT_FILENAME"]));
-  
+
   $file = $dir . "/test_". uniqid();
   $fp = fopen($file, "w");
   fwrite($fp, "This file is writable. ". uniqid());
   fclose($fp);
-  
-  $statusMessages['This directory is'] = $dir;
-  $statusMessages['This file'] = __FILE__;
-  $statusMessages['Test File path'] = $file;
-  $statusMessages['Test File Path Is this directory'] = (bool)(strpos($file, $dir) !== FALSE);
-  
-  $statusMessages['Test file has been created'] = (bool)file_exists($file);
-  $statusMessages['Test file contents written dynamically'] = file_get_contents($file);
-  
+
+  $statusMessages['FILE']['This directory is'] = $dir;
+  $statusMessages['FILE']['This file'] = __FILE__;
+  $statusMessages['FILE']['Test File path'] = $file;
+  $statusMessages['FILE']['Test File Path Is this directory'] = (bool)(strpos($file, $dir) !== FALSE);
+
+  $statusMessages['FILE']['Test file has been created'] = (bool)file_exists($file);
+  $statusMessages['FILE']['Test file contents written dynamically'] = file_get_contents($file);
+
   $pwuid = posix_getpwuid(fileowner($file));
-  $statusMessages['Test file owner'] = $pwuid["name"];
-  $statusMessages['Test file mtime'] = filemtime($file);
-  $statusMessages['Test file perms'] = substr(sprintf("%o", fileperms($file)), -4);
-  
-  $statusMessages['Test file deleted successfullly']= unlink($file);
-  $statusMessages['Files remaining in this directory']= "<pre>". var_export(scandir(__DIR__), 1) . "</pre>";
-  
-  $statusMessages['session ID'] = session_id();
-  $statusMessages['session vars'] = var_export($_SESSION, 1);
-  $statusMessages['Session var $a is set (reload page if FALSE)'] = isset($_SESSION['a']);
-  $statusMessages['Value of Session var $a (should increment with each page load)'] = $_SESSION['a'];
-  
+  $statusMessages['FILE']['Test file owner'] = $pwuid["name"];
+  $statusMessages['FILE']['Test file mtime'] = filemtime($file);
+  $statusMessages['FILE']['Test file perms'] = substr(sprintf("%o", fileperms($file)), -4);
+
+  $statusMessages['FILE']['Test file deleted successfullly']= unlink($file);
+  $statusMessages['FILE']['Files remaining in this directory']= "<pre>". var_export(scandir(__DIR__), 1) . "</pre>";
+
+  $statusMessages['SESSION']['session ID'] = session_id();
+  $statusMessages['SESSION']['session vars'] = var_export($_SESSION, 1);
+  $statusMessages['SESSION']['Session var $a is set (reload page if FALSE)'] = isset($_SESSION['a']);
+  $statusMessages['SESSION']['Value of Session var $a (should increment with each page load)'] = $_SESSION['a'];
+
+  $systemStatusUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/custom-error/status';
+  $systemStatusString = file_get_contents($systemStatusUrl);
+  $systemStatusExpectedValue = 'dbStatus:SUCCESS; fileStatus:SUCCESS';
+  $statusMessages['LIVE_STATUS']['System status is good'] = (bool)($systemStatusString == $systemStatusExpectedValue);
+  $statusMessages['LIVE_STATUS']['System status url'] = "<a href=$systemStatusUrl>$systemStatusUrl</a>";
+  $statusMessages['LIVE_STATUS']['System status expected value'] = $systemStatusExpectedValue;
+  $statusMessages['LIVE_STATUS']['System status actual value'] = $systemStatusString;
+
   $_SESSION['a']++;
 ?>
 <hr>
@@ -59,13 +71,16 @@
     <th>Status</th>
   </tr>
   <?php
-  foreach ($statusMessages as $label => $value) {
-    unset($tdClass);
-    if (is_bool($value)) {
-      $tdClass = ($value ? "bool-true" : "bool-false");
-      $value = ($value ? "TRUE" : "FALSE");
+  foreach ($statusMessages as $groupname => $messages) {
+    echo "<tr class=message-group-header><td colspan=2>$groupname</td></tr>";
+    foreach ($messages as $label => $value) {
+      unset($tdClass);
+      if (is_bool($value)) {
+        $tdClass = ($value ? "bool-true" : "bool-false");
+        $value = ($value ? "TRUE" : "FALSE");
+      }
+      echo "<tr><td>$label</td><td class=\"$tdClass\">$value</td></tr>";
     }
-    echo "<tr><td>$label</td><td class=\"$tdClass\">$value</td></tr>";
   }
   ?>
 </table>

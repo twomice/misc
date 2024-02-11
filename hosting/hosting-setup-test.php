@@ -3,8 +3,8 @@
 <html>
 <head>
   <style>
-    td.bool-false{font-weight:bold; color: red;}
-    td.bool-true{font-weight: bold; color: green;}
+    td.bool-false{font-weight:bold; background: red; color: white;}
+    td.bool-true{font-weight: bold; background: green; color: white;}
     th {font-weight: bold; background:lightgray;}
     table {border-collapse: collapse;}
     td, th {text-align: left; padding: .25em; border: 1px solid lightgrey;}

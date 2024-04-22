@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# This file is deprecated. Do not use.
+echo "DO NOT USE:"
+echo "This script ($0) has an undiagnosed tendency to run forever until"
+echo "killed manually. Please try using cv-api-wrapper.sh instead."
+exit 1;
+
 # CiviCRM api wrapper, written mainly to avoid noise in cron jobs.
 #
 # Pipe civicrm api output to this script. If the output contains "is_error: 0", 

@@ -10,6 +10,8 @@ backup_dir=""
 # If civicrm and WP DBs have different username/password, set civicrm DB credentials farther below.
 mysql_password="";
 mysql_user="";
+mysql_host="";
+mysql_port="";
 mysql_database_wordpress="";
 
 # If civcirm uses the same db with wordpress, leave this setting empty:
@@ -18,6 +20,10 @@ mysql_database_civicrm="";
 # If civicrm db uses same username/password with wordpress, leave these empty:
 mysql_password_civicrm="";
 mysql_user_civicrm="";
+
+# If civicrm db uses same host/port with wordpress, leave these empty:
+mysql_host_civicrm="";
+mysql_port_civicrm="";
 
 # Set this to "1" to use sudo when  backing up files.
 use_sudo=""

@@ -41,7 +41,7 @@ fi
 
 echo "Archiving databases ..."
 echo "  Wordpress ..."
-mysqldump -u $mysql_user --password="$mysql_password" --no-tablespaces --routines $MYSQL_OPTIONS $mysql_database_wordpress | gzip > $DIRNAME/wp.sql.gz
+mysqldump -u $mysql_user --password="$mysql_password" --no-tablespaces --routines $MYSQL_OPTIONS $mysql_database_wordpress | gzip > $DIRNAME/cms.sql.gz
 
 if [[ -n $mysql_database_civicrm ]]; then
   if [[ -z "$mysql_user_civicrm" ]]; then

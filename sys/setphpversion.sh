@@ -51,21 +51,3 @@ echo "  cli: $(php -v | head -n1)"
 echo "  web: See http://localhost/info.php (which hopefully exists)"
 
 exit;
-
-
-
-
-else
-
-echo "Switching... Please wait"
-
-sudo a2dismod php7.2;
-
-sudo a2enmod php7.0;
-
-sudo service apache2 restart
-
-sudo update-alternatives --set php /usr/bin/php7.0
-
-fi
-

@@ -41,15 +41,14 @@ cd $SCANDIR;
 
 TEMPFILE=$(mktemp /tmp/phplinter.XXXXX);
 
+# Scan for lintable files (optionally using config var to exclude more files)
 if [[ -n "$FILE_EXCLUSION_PCRE" ]]; then
   TEMPFILE="${TEMPFILE}-with-extra-exclude"
-  ack -l '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
 else
   TEMPFILE="${TEMPFILE}-without-extra-exclude"
-  ack -l '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' > $TEMPFILE;
 fi
-
-echo "tmpfile: $TEMPFILE"; exit;
 
 FILECOUNT=$(wc -l $TEMPFILE | awk '{print $1}');
 

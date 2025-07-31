@@ -35,6 +35,11 @@ else
   SCANDIR=$(pwd);
 fi
 
+if [[ ! -d "$SCANDIR" ]]; then
+  >&2 echo "Directory $SCANDIR does not exist. Exiting."
+  exit 1;
+fi
+
 read -p "About to scan $SCANDIR . Strike enter to continue or Ctrl+C to quit..."
 
 cd $SCANDIR;
@@ -42,29 +47,43 @@ cd $SCANDIR;
 TEMPFILE=$(mktemp /tmp/phplinter.XXXXX);
 
 # Scan for lintable files (optionally using config var to exclude more files)
+spinner() {
+  while :; do
+    for s in / - \\ \|; do
+      printf "\r${1} $s" >&2; sleep 0.1;
+    done;
+  done;
+}
+spinner 'Scanning ...' &
+SPINNER_PID=$!
+
+DEFAULT_EXCLUSION_REGEX='\.(md|xml|js|tpl|css|markdown|scss|txt|yml|sh)$';
 if [[ -n "$FILE_EXCLUSION_PCRE" ]]; then
-  TEMPFILE="${TEMPFILE}-with-extra-exclude"
-  ack -l --no-follow '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
 else
-  TEMPFILE="${TEMPFILE}-without-extra-exclude"
-  ack -l --no-follow '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" > $TEMPFILE;
 fi
 
 FILECOUNT=$(wc -l $TEMPFILE | awk '{print $1}');
+
+kill $SPINNER_PID  # stop spinner
 
 echo "Scanning $FILECOUNT files ..."
 
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
+FILECOUNTER=1;
 for f in $(cat $TEMPFILE); do
   ERRORS=$(php -d short_open_tag=On -l $f 2>&1 | grep -P '^PHP (Parse|Fatal) error')
   if [[ -n "$ERRORS" ]]; then
     echo "===== $f"
     echo "$ERRORS"
-  else
-    >&2 echo -n '.'
   fi
+  ((FILECOUNTER++))
+  pct=$((FILECOUNTER*100/FILECOUNT))
+  >&2 printf "\rFiles processed: $FILECOUNTER out of $FILECOUNT (${pct}%% complete)"
 done
+>&2 echo;
 IFS=$SAVEIFS
 
 echo "Done."

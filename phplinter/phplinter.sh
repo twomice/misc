@@ -18,7 +18,16 @@ function usage() {
 # This line determines the location of the script even when called from a bash
 # prompt in another directory (in which case `pwd` will point to that directory
 # instead of the one containing this script).  See http://stackoverflow.com/a/246128
-mydir="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
+MYDIR="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
+
+# Source config file or exit.
+if [ -e ${MYDIR}/config.sh ]; then
+  source ${MYDIR}/config.sh
+else
+  echo "Could not find required config file at ${MYDIR}/config.sh. Exiting."
+  exit 1
+fi
+
 
 if [[ -n $1 ]]; then
   SCANDIR="$1";
@@ -32,7 +41,16 @@ cd $SCANDIR;
 
 TEMPFILE=$(mktemp /tmp/phplinter.XXXXX);
 
-ack -l '<\?(\s|php|=)' | grep -vP '\.(md|xml)$' > $TEMPFILE;
+if [[ -n "$FILE_EXCLUSION_PCRE" ]]; then
+  TEMPFILE="${TEMPFILE}-with-extra-exclude"
+  ack -l '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
+else
+  TEMPFILE="${TEMPFILE}-without-extra-exclude"
+  ack -l '<\?(\s|php|=)' | grep -vP '\.(md|xml|js|tpl)$' > $TEMPFILE;
+fi
+
+echo "tmpfile: $TEMPFILE"; exit;
+
 FILECOUNT=$(wc -l $TEMPFILE | awk '{print $1}');
 
 echo "Scanning $FILECOUNT files ..."
@@ -44,7 +62,7 @@ for f in $(cat $TEMPFILE); do
   if [[ -n "$ERRORS" ]]; then
     echo "===== $f"
     echo "$ERRORS"
-  else 
+  else
     >&2 echo -n '.'
   fi
 done

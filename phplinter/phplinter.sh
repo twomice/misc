@@ -40,7 +40,7 @@ echo "Scanning $FILECOUNT files ..."
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 for f in $(cat $TEMPFILE); do
-  ERRORS=$(php -d short_open_tag=On -l $f 2>&1 | grep -P '^PHP Parse error')
+  ERRORS=$(php -d short_open_tag=On -l $f 2>&1 | grep -P '^PHP (Parse|Fatal) error')
   if [[ -n "$ERRORS" ]]; then
     echo "===== $f"
     echo "$ERRORS"
@@ -51,3 +51,4 @@ done
 IFS=$SAVEIFS
 
 echo "Done."
+echo "Scanned file list is at: $TEMPFILE"

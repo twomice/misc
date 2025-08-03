@@ -68,8 +68,8 @@ FILECOUNT=$(wc -l $TEMPFILE | awk '{print $1}');
 
 kill $SPINNER_PID  # stop spinner
 
+echo "PHP version is: $(php -v | head -n1)"
 echo "Scanning $FILECOUNT files ..."
-
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 FILECOUNTER=1;

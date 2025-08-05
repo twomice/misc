@@ -57,11 +57,11 @@ spinner() {
 spinner 'Scanning ...' &
 SPINNER_PID=$!
 
-DEFAULT_EXCLUSION_REGEX='\.(md|xml|js|tpl|css|markdown|scss|txt|yml|sh)$';
+DEFAULT_EXCLUSION_REGEX='\.(md|xml|js|tpl|css|markdown|scss|txt|yml|sh|json)$';
 if [[ -n "$FILE_EXCLUSION_PCRE" ]]; then
-  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" | grep -vP "${FILE_EXCLUSION_PCRE}" > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" | grep -vP "${FILE_EXCLUSION_PCRE}" | sort > $TEMPFILE;
 else
-  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" > $TEMPFILE;
+  ack -l --no-follow '<\?(\s|php|=)' | grep -vP "$DEFAULT_EXCLUSION_REGEX" | sort > $TEMPFILE;
 fi
 
 FILECOUNT=$(wc -l $TEMPFILE | awk '{print $1}');
@@ -80,8 +80,10 @@ for f in $(cat $TEMPFILE); do
     echo "$ERRORS"
   fi
   ((FILECOUNTER++))
-  pct=$((FILECOUNTER*100/FILECOUNT))
-  >&2 printf "\rFiles processed: $FILECOUNTER out of $FILECOUNT (${pct}%% complete)"
+  if [[ $FILECOUNTER -le $FILECOUNT ]]; then
+    pct=$((FILECOUNTER*100/FILECOUNT))
+    >&2 printf "\rFiles processed: $FILECOUNTER out of $FILECOUNT (${pct}%% complete)"
+  fi
 done
 >&2 echo;
 IFS=$SAVEIFS

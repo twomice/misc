@@ -1,0 +1,4 @@
+# Usage: Copy this file to config.sh and edit per comments below.
+
+# Notify TO email
+NOTIFY_TO_EMAIL=""

@@ -1,0 +1,18 @@
+# Usage:
+# Copy this file to data.psv and edit as follows:
+#
+# Lines beginning with a valid USER@HOSTNAME specification (seee below) will be used.
+# All others will be ignored.
+#
+# Each line represents a single remote git repo to be checked, specified by
+# 2 fields, in a pipe-delimited format:
+# USER@HOSTNAME|DIRECTORY
+#
+# USER@HOSTNAME: String. For use in an ssh command as 'user@]hostname'
+# DIRECTORY: String. The top-level directory of the checked git repo.
+#
+# Example:
+# user1@example.com|/var/www/example.com
+# This will cause gitchecker to issue a command like `ssh user1@example.com git -C /var/www/example.com status`
+# and alert if any un-committed changes are found therein.
+

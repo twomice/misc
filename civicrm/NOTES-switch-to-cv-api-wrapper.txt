@@ -1,0 +1,7 @@
+# To switch to cv-api-wrapper.sh from civi_api_trap_errors.sh,
+# run these lines as root 
+wget -O /usr/local/bin/cv-api-wrapper.sh https://raw.githubusercontent.com/twomice/misc/master/civicrm/cv-api-wrapper.sh
+wget -O /usr/local/bin/civi_api_trap_errors.sh https://raw.githubusercontent.com/twomice/misc/master/civicrm/civi_api_trap_errors.sh
+chmod a+x /usr/local/bin/cv-api-wrapper.sh
+echo "CV_PATH='$(command -v cv)' /usr/local/bin/cv-api-wrapper.sh"
+ 

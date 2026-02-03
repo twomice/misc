@@ -21,7 +21,17 @@ if [[ "$#" -lt "1" ]]; then
   echo "      when importing the sql file into mysql" >&2
   echo "    * If any other string, output sql file will contain these database-level statements" >&2
   echo "      specifying the given string as a database name." >&2
+  echo >&2
+  echo "NOTE: This program requires strip-mysql-definers.pl, which at time of writing is part of the" >&2
+  echo "      twomcie/misc repo (found at ./data_management/strip-mysql-definers.pl); it's recommended" >&2
+  echo "      to symplink that script into your path." >&2
   exit 1
+fi
+
+# require strip-mysql-definers.pl
+if ! command -v strip-mysql-definers.pl >/dev/null 2>&1; then
+  echo "strip-mysql-definers.pl not found. Exiting. Run this script without arguments to see usage and notes." >&2;
+  exit 1;
 fi
 
 db_dir="$1"
@@ -64,7 +74,7 @@ echo "set AUTOCOMMIT = 0;" >> "$sqlfile";
 for i in $(ls "$db_dir"/tables/); do 
   echo "  adding $db_dir/tables/$i" >&2
   tablefile=$(mktemp);
-  sed 's#^/\*!50003 CREATE\*/ /\*!50017 DEFINER=`[^`]*`@`[^`]*`\*/#/*!50003 CREATE*/#g' "$db_dir"/tables/"$i" >> "$tablefile"
+  cat "$db_dir"/tables/"$i" | strip-mysql-definers.pl >> "$tablefile"
   # Until https://github.com/twomice/misc/issues/7 is solved, sql files may have
   # spurious `USE` statements, which will reference the wrong database if we're not
   # using the original db name. Strip that.
@@ -76,7 +86,7 @@ done
 # We've used sed to remove DEFINER from triggers and such, but some databases also
 # contain `SQL SECURITY DEFINER` (on a single line) which specify DEFINER names.
 # Remove those also.
-sed -i '/DEFINER/d' "$sqlfile"
+strip-mysql-definers.pl -i "$sqlfile"
 
 # Since we disabled autocommit above, add a commit statement to write all.
 echo "COMMIT;" >> "$sqlfile";

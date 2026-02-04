@@ -26,7 +26,7 @@ function usage() {
 # This line determines the location of the script even when called from a bash
 # prompt in another directory (in which case `pwd` will point to that directory
 # instead of the one containing this script).  See http://stackoverflow.com/a/246128
-mydir="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
+MYDIR="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
 
 # Reject root. This script uses `rm -rf`. We also enforce the same limitation in
 # in create.sh.
@@ -36,10 +36,10 @@ if [ "$(id -u)" == "0" ]; then
 fi
 
 # Source config file or exit.
-if [ -e ${mydir}/config.sh ]; then
-  source ${mydir}/config.sh
+if [ -e ${MYDIR}/config.sh ]; then
+  source ${MYDIR}/config.sh
 else
-  err "Could not find required config file at ${mydir}/config.sh. Exiting."
+  err "Could not find required config file at ${MYDIR}/config.sh. Exiting."
   exit 1;
 fi
 

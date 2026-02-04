@@ -27,7 +27,15 @@ function usage() {
 # This line determines the location of the script even when called from a bash
 # prompt in another directory (in which case `pwd` will point to that directory
 # instead of the one containing this script).  See http://stackoverflow.com/a/246128
-mydir="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
+MYDIR="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
+
+# Include functions script.
+if [[ -e ${MYDIR}/functions.sh ]]; then
+  source ${MYDIR}/functions.sh
+else
+  >&2 echo "Could not find required functions file at ${MYDIR}/functions.sh. Exiting."
+  exit 1
+fi
 
 # Reject root. It's not so bad in create.sh, but in cleanup.sh we're using `rm -rf`,
 # so let's break them of the sudo/root habit now.
@@ -37,10 +45,10 @@ if [ "$(id -u)" == "0" ]; then
 fi
 
 # Source config file or exit.
-if [ -e ${mydir}/config.sh ]; then
-  source ${mydir}/config.sh
+if [ -e ${MYDIR}/config.sh ]; then
+  source ${MYDIR}/config.sh
 else
-  err "Could not find required config file at ${mydir}/config.sh. Exiting."
+  err "Could not find required config file at ${MYDIR}/config.sh. Exiting."
   exit 1;
 fi
 
@@ -72,3 +80,4 @@ echo "Timestamp file for maximum age calculations for ephemral directories. DO N
 touch -d "$MAX_AGE" $TIMESTAMP_FILE
 
 echo "Ephemeral directory created at: ${TARGET_DIR}"
+print_dir_url "${TARGET_DIR}";

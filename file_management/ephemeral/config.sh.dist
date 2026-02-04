@@ -1,5 +1,14 @@
 # Directory to contain ephemeral file directories.
+# e.g. /var/www/mysite/docroot/ephemeral-files
 BASEDIR=""
+
+# Leading part of $BASEDIR to be stripped for url construction.
+# e.g. /var/www/mysite/docroot/
+BASEDIR_BASE=""
+
+# Base URL to replace $BASEDIR_BASE for url construction.
+# e.g. https://mysite/
+BASE_URL=""
 
 # When delete_age is not specified at the command line on creating a new directory,
 # use this relative timespan. Default is 24 hours from creation time. Must be a

@@ -28,7 +28,7 @@ fi
 tmpfile=$(mktemp /tmp/cv-api-wrapper-XXXXXXX.txt);
 
 # Call `cv api` with our given arguments, and pipe both STDERR and STDOUT to our tmpfile.
-$cv api $@ &> $tmpfile;
+"$cv" api "$@" &> "$tmpfile";
 # If `cv api` exited with anything other than "0", we'll print (most of) our
 # tmpfile content to STDOUT.
 if [[ "$?" != "0" ]]; then

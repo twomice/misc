@@ -7,7 +7,7 @@ set -euo pipefail
 # instead of the one containing this script).  See http://stackoverflow.com/a/246128
 MYDIR="$( cd -P "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )/"
 
-REQUIRED_CIVIX_VERSION="25.12.0"
+REQUIRED_CIVIX_VERSION="26.02.0"
 
 ACTUAL_VERSION=$(civix --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')
 

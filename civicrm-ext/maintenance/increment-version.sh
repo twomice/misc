@@ -55,9 +55,70 @@ fi
 IFS='.' read -r major minor patch <<< "$current_version"
 new_patch=$((patch + 1))
 new_version="${major}.${minor}.${new_patch}"
+tag="v${new_version}"
 
 echo "Current version: $current_version"
 echo "New version:     $new_version"
+
+# --- find last tag ---
+last_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+if [ -z "$last_tag" ]; then
+  range=""
+else
+  range="${last_tag}..HEAD"
+fi
+
+if git diff --quiet "${range}"; then
+  echo ""
+  echo "ATTENTION: No changes found since last tag ${last_tag}."
+  echo "           You probably don't want to continue."
+  read -r -p "           Press Enter to continue incrementing version anyway, or Ctrl+C to cancel... "
+fi
+
+# --- generate draft notes ---
+notes=$(git log $range --no-merges --pretty=format:"- %s" || true)
+merge_notes=$(git log $range --merges --pretty=format:"- %b" || true)
+
+draft_notes=$(printf "%s\n%s\n" "$notes" "$merge_notes" \
+  | sed '/^$/d' \
+  | sed '/^Merge /d' \
+  | awk '!seen[$0]++')
+
+# --- temp file ---
+tmpfileReleaseNotes=$(mktemp)
+
+{
+  echo "## ${tag}"
+  echo
+  if [ -n "$draft_notes" ]; then
+    echo "$draft_notes"
+  else
+    echo "- (No significant changes)"
+  fi
+  echo
+} > "$tmpfileReleaseNotes"
+
+# --- edit ---
+echo "Opening editor for release notes..."
+${EDITOR:-vi} "$tmpfileReleaseNotes"
+
+# --- create stub changelog if none ---
+if [ ! -f "CHANGELOG.md" ]; then
+  echo "## Earlier versions" >> CHANGELOG.md
+  echo "[No changelog for earlier versions]" >> CHANGELOG.md
+fi
+
+# --- update changelog ---
+# prepend this tag's release notes to top of CHANGELOG.md
+tmpfileChangeLog=$(mktemp)
+{
+  cat "$tmpfileReleaseNotes"
+  echo
+  cat CHANGELOG.md
+} > "$tmpfileChangeLog"
+mv "$tmpfileChangeLog" CHANGELOG.md
+git add CHANGELOG.md
 
 # --- update info.xml ---
 # portable sed (handles GNU + BSD)
@@ -74,15 +135,21 @@ git add info.xml
 git commit -m "Increment version to ${new_version}"
 
 # --- tag ---
-tag="v${new_version}"
-git tag "$tag"
+git tag "$tag" -F "$tmpfileReleaseNotes"
 
 # -- push --
-#echo
-#git remote -v
-#echo "NOTE REMOTES ABOVE! Incremented version to ${new_version} and tagged as ${tag}. About to push commit and tag to origin/master. [Enter to continue, Ctrl+C to quit now]"
-#read continue
 git push origin master
 git push origin "$tag"
+
+# -- create a release, if `hub` is available --
+if command -v hub >/dev/null 2>&1; then
+  echo "hub is available, creating a release"
+  { echo "$tag"; echo; git tag -l --format='%(contents)' "$tag"; } | hub release create -f - "$tag"
+else
+  echo "hub not found, no release created."
+fi
+
+# --- cleanup tag notes file ---
+rm "$tmpfileReleaseNotes"
 
 echo "Done: ${tag}"

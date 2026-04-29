@@ -35,6 +35,13 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+echo ""
+echo "ATTENTION: If new changes exist, will attempt to:"
+echo "  - increment version, "
+echo "  - generate a changelog (for your review), "
+echo "  - and publish a new release."
+read -r -p "           Press Enter to continue, or Ctrl+C to cancel... "
+
 # pull latest from origin/master
 git pull origin master
 

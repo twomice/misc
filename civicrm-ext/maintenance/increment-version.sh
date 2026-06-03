@@ -12,11 +12,32 @@ fi
 
 cd "$EXT_DIR"
 
+# ensure gnu sed.
+if ! sed --version >/dev/null 2>&1; then
+  echo "Error: GNU sed is required but missing."
+  exit 1
+fi
+
+# ensure pcre grep.
+if ! echo test | grep -oP 'te\Kst' >/dev/null 2>&1; then
+  echo "Error: grep with PCRE (-P) support is required."
+  exit 1
+fi
+
+# ensure info.xml exists.
 if [ ! -f "info.xml" ]; then
   echo "Error: info.xml not found in $EXT_DIR"
   exit 1
 fi
 
+# ensure <releaseDate> tag exists.
+current_releaseDate=$(grep -oP '(?<=<releaseDate>)[^<]+' info.xml || true)
+if [ -z "$current_releaseDate" ]; then
+  echo "Error: could not find <releaseDate> in info.xml"
+  exit 1
+fi
+
+# ensure git repo.
 if [ ! -d ".git" ]; then
   echo "Error: not a git repo (no .git directory)"
   exit 1
@@ -128,14 +149,10 @@ mv "$tmpfileChangeLog" CHANGELOG.md
 git add CHANGELOG.md
 
 # --- update info.xml ---
-# portable sed (handles GNU + BSD)
-if sed --version >/dev/null 2>&1; then
-  # GNU sed
-  sed -i "s/<version>${current_version}<\/version>/<version>${new_version}<\/version>/" info.xml
-else
-  # BSD sed (mac)
-  sed -i '' "s/<version>${current_version}<\/version>/<version>${new_version}<\/version>/" info.xml
-fi
+# version:
+sed -i "s#<version>${current_version}</version>#<version>${new_version}</version>#" info.xml
+# releaseDate:
+sed -i "s#<releaseDate>[^<]*</releaseDate>#<releaseDate>$(date +%F)</releaseDate>#" info.xml
 
 # --- commit ---
 git add info.xml

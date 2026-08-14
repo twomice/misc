@@ -15,11 +15,15 @@ sub process {
 }
 
 sub usage {
+    use File::Basename;
+    my $filename = basename($0);
     die "Usage:\n"
-      . "  $0                # read STDIN, write STDOUT\n"
-      . "  $0 file           # read file, write STDOUT\n"
-      . "  $0 -i file        # edit file in place\n"
-      . "  $0 file -i        # edit file in place\n";
+      . "  $filename                # read STDIN, write STDOUT\n"
+      . "  $filename file           # read file, write STDOUT\n"
+      . "  $filename -i file        # edit file in place\n"
+      . "  $filename file -i        # edit file in place\n"
+      . "  $filename -h             # print this help message\n"
+      . "  $filename --help         # print this help message\n";
 }
 
 my ($inplace, $file);
@@ -32,6 +36,9 @@ if (@ARGV == 0) {
     exit 0;
 }
 elsif (@ARGV == 1) {
+    if ($ARGV[0] eq '-h' or $ARGV[0] eq '--help') {
+      usage();
+    }
     # file → STDOUT
     $file = $ARGV[0];
 }
